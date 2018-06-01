@@ -21,12 +21,13 @@ knitr::opts_chunk$set(
   message = FALSE,
   warning = FALSE,
   error = FALSE,
-  fig.align = 'center'
+  fig.align = 'center',
+  fig.path = '../figs/'
 )
 
 # Utility functions
 script <- function(file) source(file.path("..", "scripts", file))
-fig <- function(file) file.path("index_files", "figure-html", file)
+fig <- function(file) file.path("..", "figs", file)
 fa <- function(icon) paste0('<i class="fa fa-', icon, '"></i>')
 
 # Check dependencies
