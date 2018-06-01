@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Non-Standard Evaluation</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Janus Valberg-Madsen" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/default-fonts.css" rel="stylesheet" />
+    <link href="libs/font-awesome/css/font-awesome.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="custom.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Non-Standard Evaluation
+## and Metaprogramming in R
+### <a href='https://github.com/janusvm'>Janus Valberg-Madsen</a>
+### 2018-06-01 @ Aalborg R User Group
+
+---
+
+
+
+
+
+```r
+library(rlang)
+```
+
+--
+
+
+```r
+e1 &lt;- expr(y &lt;- 2 * x)
+e2 &lt;- expr(`&lt;-`(y, `*`(2, x)))
+identical(e1, e2)
+```
+
+```
+## [1] TRUE
+```
+
+--
+
+&lt;img src="index_files/figure-html/simple-ast.svg" width="50%" style="display: block; margin: auto;" /&gt;
+
+???
+Here is a graphical representation of what's going on, called an _abstract syntax tree (AST)_.  
+The orange squares represent calls; first child is the function being called, subsequent children are arguments.
+
+---
+
+# Everything is a function
+
+.pull-left[
+
+```r
+e1 &lt;- expr(1)
+e2 &lt;- expr(({1}))
+```
+]
+
+---
+
+count: false
+
+# Everything is a function
+
+.pull-left[
+
+```r
+e1 &lt;- expr(1)
+e2 &lt;- expr(({1}))
+```
+
+
+```r
+identical(eval(e1), eval(e2))
+```
+
+```
+## [1] TRUE
+```
+
+```r
+identical(e1, e2)
+```
+
+```
+## [1] FALSE
+```
+]
+
+--
+
+.pull-right[
+&lt;img src="index_files/figure-html/parens-ast.svg" width="75%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+# Links
+
+
+📕 [Advanced R](https://adv-r.hadley.nz) by Hadley Wickham (online book)
+
+&lt;i class="fa fa-github"&gt;&lt;/i&gt; [repository](https://github.com/AalborgRUG/talk-nse) for this presentation with source code and extra notes
+
+📦 [xaringan](https://github.com/yihui/xaringan), used to make these slides (`remark.js` wrapper for R)
+
+📦 [jsvm](https://github.com/janusvm/jsvm), used for producing the AST figures (developed by yours truly 😏)
+
+---
+
+class: inverse, middle, center
+
+# ✨ Thank you for your time ✨
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "monokai-sublime",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

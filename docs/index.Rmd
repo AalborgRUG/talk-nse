@@ -1,0 +1,116 @@
+---
+title: "Non-Standard Evaluation"
+subtitle: "and Metaprogramming in R"
+author: "<a href='https://github.com/janusvm'>Janus Valberg-Madsen</a>"
+date: "`r Sys.Date()` @ Aalborg R User Group"
+output:
+  xaringan::moon_reader:
+    css: [default, default-fonts, custom.css]
+    lib_dir: libs
+    nature:
+      highlightStyle: monokai-sublime  # gruvbox-light
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+htmltools::tagList(rmarkdown::html_dependency_font_awesome())
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  error = FALSE,
+  fig.align = 'center'
+)
+
+# Utility functions
+script <- function(file) source(file.path("..", "scripts", file))
+fig <- function(file) file.path("index_files", "figure-html", file)
+fa <- function(icon) paste0('<i class="fa fa-', icon, '"></i>')
+
+# Check dependencies
+script("deps.R")
+```
+
+```{r pkgs}
+library(rlang)
+```
+
+--
+
+```{r}
+e1 <- expr(y <- 2 * x)
+e2 <- expr(`<-`(y, `*`(2, x)))
+identical(e1, e2)
+```
+
+--
+
+```{r, echo=FALSE, fig.align='center', out.width='50%'}
+filename <- fig("simple-ast.svg")
+jsvm::expr2tikz(!!e1, filename)
+knitr::include_graphics(filename)
+```
+
+???
+Here is a graphical representation of what's going on, called an _abstract syntax tree (AST)_.  
+The orange squares represent calls; first child is the function being called, subsequent children are arguments.
+
+---
+
+# Everything is a function
+
+.pull-left[
+```{r}
+e1 <- expr(1)
+e2 <- expr(({1}))
+```
+]
+
+---
+
+count: false
+
+# Everything is a function
+
+.pull-left[
+```{r}
+e1 <- expr(1)
+e2 <- expr(({1}))
+```
+
+```{r}
+identical(eval(e1), eval(e2))
+identical(e1, e2)
+```
+]
+
+--
+
+.pull-right[
+```{r, echo=FALSE, out.width='75%'}
+filename <- fig("parens-ast.svg")
+jsvm::expr2tikz(!!e2, filename)
+knitr::include_graphics(filename)
+```
+]
+
+---
+
+# Links
+
+
+`r emo::ji("closed_book")` [Advanced R](https://adv-r.hadley.nz) by Hadley Wickham (online book)
+
+`r fa("github")` [repository](https://github.com/AalborgRUG/talk-nse) for this presentation with source code and extra notes
+
+`r emo::ji("package")` [xaringan](https://github.com/yihui/xaringan), used to make these slides (`remark.js` wrapper for R)
+
+`r emo::ji("package")` [jsvm](https://github.com/janusvm/jsvm), used for producing the AST figures (developed by yours truly `r {emo::ji("smirk")}`)
+
+---
+
+class: inverse, middle, center
+
+# `r {emo::ji("sparkles")}` Thank you for your time `r {emo::ji("sparkles")}`
