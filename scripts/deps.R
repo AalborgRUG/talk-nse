@@ -6,6 +6,7 @@ if (!"devtools" %in% installed.packages()) {
 }
 
 deps <- list(
+  "here"     = quote(install.packages("here")),
   "rlang"    = quote(install.packages("rlang")),
   "jsvm"     = quote(devtools::install_github("janusvm/jsvm")),
   "xaringan" = quote(devtools::install_github("yihui/xaringan")),
