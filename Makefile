@@ -2,8 +2,8 @@
 # --------------------------------------------------------------------------
 
 # Main files
-SLIDES = docs/index
-CSS = docs/custom.css
+SLIDES = index
+CSS = custom.css
 NOTES = notes
 
 # Directories
@@ -40,17 +40,18 @@ slides: $(SLIDES).html
 $(SLIDES).html: $(SLIDES).Rmd $(CSS) $(OUT)
 	Rscript -e "rmarkdown::render('${SLIDES}.Rmd', 'xaringan::moon_reader')"
 
+figures: $(FIG_OUT)
+
 # R script file rule
 %.Rout: %.R
 	Rscript $(R_OPTS) $<
 	touch $@
 
 
-# Delete figures
-clean-figs:
+# Delete figures and out-files
+clean:
 	rm -fv $(SVGFIGS)
-	rm -fv $(FIG_OUT)
+	rm -fv $(OUT)
 
 # Set phony targets
-.PHONY: deps slides presentation \
-clean-figs
+.PHONY: deps slides presentation figures clean

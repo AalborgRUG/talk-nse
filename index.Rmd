@@ -25,8 +25,8 @@ knitr::opts_chunk$set(
 )
 
 # Utility functions
-script <- function(file) source(file.path("..", "scripts", file))
-fig <- function(file) file.path("index_files", "figure-html", file)
+script <- function(file) source(file.path("scripts", file))
+fig <- function(file) file.path("figs", file)
 fa <- function(icon) paste0('<i class="fa fa-', icon, '"></i>')
 
 # Check dependencies
@@ -48,9 +48,7 @@ identical(e1, e2)
 --
 
 ```{r, echo=FALSE, fig.align='center', out.width='50%'}
-filename <- fig("simple-ast.svg")
-jsvm::expr2tikz(!!e1, filename)
-knitr::include_graphics(filename)
+knitr::include_graphics(fig("simple-ast.svg"))
 ```
 
 ???
@@ -90,9 +88,7 @@ identical(e1, e2)
 
 .pull-right[
 ```{r, echo=FALSE, out.width='75%'}
-filename <- fig("parens-ast.svg")
-jsvm::expr2tikz(!!e2, filename)
-knitr::include_graphics(filename)
+knitr::include_graphics(fig("parens-ast.svg"))
 ```
 ]
 
