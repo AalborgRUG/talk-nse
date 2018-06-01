@@ -1,2 +1,3 @@
 libs/* linguist-vendored
-
+*.Rmd linguist-language=R
+*.html linguist-generated=true
