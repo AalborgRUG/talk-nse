@@ -6,3 +6,6 @@
 
 # AUCTeX auto folders
 auto/
+
+# Makefile related stuff
+*.Rout
