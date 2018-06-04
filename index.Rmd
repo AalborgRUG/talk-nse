@@ -28,7 +28,32 @@ knitr::opts_chunk$set(
 script <- function(file) source(file.path("scripts", file))
 fig <- function(file) file.path("figs", file)
 fa <- function(icon) paste0('<i class="fa fa-', icon, '"></i>')
+error_print <- function(expr) {
+  e <- tryCatch(expr, error = function(e) e$message)
+  cat("Error in <...>:", e, sep = "\n")
+}
 ```
+
+class: center, middle, inverse
+background-image: url(./img/black-50.png), url(./img/code.jpg)
+background-size: cover
+
+# What is metaprogramming?
+
+???
+- when code can inspect and modify other code
+- in other words, when _code becomes data_
+- 
+
+---
+
+class: center, middle, inverse
+background-image: url(./img/black-25.png), url(./img/promise.jpg)
+background-size: cover
+
+# Promises
+
+---
 
 ```{r pkgs}
 library(rlang)
@@ -51,6 +76,13 @@ knitr::include_graphics(fig("simple-ast.svg"))
 ???
 Here is a graphical representation of what's going on, called an _abstract syntax tree (AST)_.  
 The orange squares represent calls; first child is the function being called, subsequent children are arguments.
+
+---
+
+```lisp
+(setq y (* 2 x))
+```
+
 
 ---
 
@@ -90,6 +122,95 @@ knitr::include_graphics(fig("parens-ast.svg"))
 ]
 
 ---
+name: applications
+class: center, middle, inverse
+
+# Applications
+
+???
+
+- time to look at some examples
+
+---
+
+# Programming with tidyverse
+
+```{r, include=FALSE}
+library(tidyverse, quietly = TRUE)
+```
+
+--
+
+.pull-left[
+- Problem: `tidyverse` functions are made for interactive use/scripting
+
+```{r}
+my_count <- 
+  function(data, group_var) {
+  data %>% 
+    group_by(group_var) %>% 
+    tally()
+}
+```
+```{r, eval=FALSE}
+my_count(iris, Species)
+```
+
+```{r, echo=FALSE}
+error_print(my_count(iris, Species))
+```
+]
+
+--
+
+.pull-right[
+- Solution: capture argument and evaluate in the correct context
+
+```{r}
+my_count2 <- 
+  function(data, group_var) {
+    group_var <- enquo(group_var)  #<<
+    data %>% 
+      group_by(!! group_var) %>% 
+      tally()
+  }
+```
+```{r}
+my_count2(iris, Species)
+```
+]
+
+---
+
+## `r emo::ji("package")` dev overview
+
+Action | `base` | `rlang`
+--- | --- | ---
+Quote input as-is | `quote` | `expr`, `quo`
+Quote user input | `substitute` | `enexpr`, `enquo`
+
+---
+name: tips
+
+# Tips & tricks
+
+--
+
+- Appease `R CMD check` with `utils::globalVariables(c("foo", "bar", "baz"))`
+
+???
+- some usages of NSE might make `R CMD check` think you have uninitialised variables
+- `utils::globalVariables` tells `R CMD check` that it's fine
+
+--
+
+- ...
+
+???
+- more tricks here...
+
+---
+name: links
 
 # Links
 
@@ -97,6 +218,9 @@ knitr::include_graphics(fig("parens-ast.svg"))
 `r emo::ji("closed_book")` [Advanced R](https://adv-r.hadley.nz) by Hadley Wickham (online book)
 
 `r fa("github")` [repository](https://github.com/AalborgRUG/talk-nse) for this presentation with source code and extra notes
+
+`r fa("github")` [AalborgRUG](https://github.com/AalborgRUG), a GitHub Organisation for this R User Group meant for sharing slides, notes, and code.
+Contact [Ege](mailto:rubak@math.aau.dk) to request membership
 
 `r emo::ji("package")` [xaringan](https://github.com/yihui/xaringan), used to make these slides (`remark.js` wrapper for R)
 

@@ -1,11 +1,17 @@
 /*----- FONTS -----*/
 @import url('https://fonts.googleapis.com/css?family=Roboto+Condensed:300');
-@import url('https://fonts.googleapis.com/css?family=Ubuntu Mono');
+@import url('https://fonts.googleapis.com/css?family=Ubuntu Mono:400,700');
 
 /* Code */
 .remark-code, .remark-inline-code {
   font-family: 'Ubuntu Mono', 'Lucida Console', Monaco, monospace;
-  font-size: 110%;
+  font-weight: 400;
+}
+
+.remark-code-line-highlighted {
+  color: rgb(253, 151, 31);
+  background-color: rgba(0, 0, 0, 0);
+  font-weight: 700;
 }
 
 /* Slide numbers */

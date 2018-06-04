@@ -16,12 +16,33 @@ class: center, middle, inverse, title-slide
 # Non-Standard Evaluation
 ## and Metaprogramming in R
 ### <a href='https://github.com/janusvm'>Janus Valberg-Madsen</a>
-### 2018-06-01 @ Aalborg R User Group
+### 2018-06-04 @ Aalborg R User Group
 
 ---
 
 
 
+
+class: center, middle, inverse
+background-image: url(./img/black-50.png), url(./img/code.jpg)
+background-size: cover
+
+# What is metaprogramming?
+
+???
+- when code can inspect and modify other code
+- in other words, when _code becomes data_
+- 
+
+---
+
+class: center, middle, inverse
+background-image: url(./img/black-25.png), url(./img/promise.jpg)
+background-size: cover
+
+# Promises
+
+---
 
 
 ```r
@@ -48,6 +69,13 @@ identical(e1, e2)
 ???
 Here is a graphical representation of what's going on, called an _abstract syntax tree (AST)_.  
 The orange squares represent calls; first child is the function being called, subsequent children are arguments.
+
+---
+
+```lisp
+(setq y (* 2 x))
+```
+
 
 ---
 
@@ -99,6 +127,108 @@ identical(e1, e2)
 ]
 
 ---
+name: applications
+class: center, middle, inverse
+
+# Applications
+
+???
+
+- time to look at some examples
+
+---
+
+# Programming with tidyverse
+
+
+
+--
+
+.pull-left[
+- Problem: `tidyverse` functions are made for interactive use/scripting
+
+
+```r
+my_count &lt;- 
+  function(data, group_var) {
+  data %&gt;% 
+    group_by(group_var) %&gt;% 
+    tally()
+}
+```
+
+```r
+my_count(iris, Species)
+```
+
+
+```
+## Error in &lt;...&gt;:
+## Column `group_var` is unknown
+```
+]
+
+--
+
+.pull-right[
+- Solution: capture argument and evaluate in the correct context
+
+
+```r
+my_count2 &lt;- 
+  function(data, group_var) {
+*   group_var &lt;- enquo(group_var)
+    data %&gt;% 
+      group_by(!! group_var) %&gt;% 
+      tally()
+  }
+```
+
+```r
+my_count2(iris, Species)
+```
+
+```
+## # A tibble: 3 x 2
+##   Species        n
+##   &lt;fct&gt;      &lt;int&gt;
+## 1 setosa        50
+## 2 versicolor    50
+## 3 virginica     50
+```
+]
+
+---
+
+## 📦 dev overview
+
+Action | `base` | `rlang`
+--- | --- | ---
+Quote input as-is | `quote` | `expr`, `quo`
+Quote user input | `substitute` | `enexpr`, `enquo`
+
+---
+name: tips
+
+# Tips &amp; tricks
+
+--
+
+- Appease `R CMD check` with `utils::globalVariables(c("foo", "bar", "baz"))`
+
+???
+- some usages of NSE might make `R CMD check` think you have uninitialised variables
+- `utils::globalVariables` tells `R CMD check` that it's fine
+
+--
+
+- ...
+
+???
+- more tricks here...
+
+---
+name: links
 
 # Links
 
@@ -106,6 +236,9 @@ identical(e1, e2)
 📕 [Advanced R](https://adv-r.hadley.nz) by Hadley Wickham (online book)
 
 &lt;i class="fa fa-github"&gt;&lt;/i&gt; [repository](https://github.com/AalborgRUG/talk-nse) for this presentation with source code and extra notes
+
+&lt;i class="fa fa-github"&gt;&lt;/i&gt; [AalborgRUG](https://github.com/AalborgRUG), a GitHub Organisation for this R User Group meant for sharing slides, notes, and code.
+Contact [Ege](mailto:rubak@math.aau.dk) to request membership
 
 📦 [xaringan](https://github.com/yihui/xaringan), used to make these slides (`remark.js` wrapper for R)
 
