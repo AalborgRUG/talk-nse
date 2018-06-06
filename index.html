@@ -16,7 +16,7 @@ class: center, middle, inverse, title-slide
 # Non-Standard Evaluation
 ## and Metaprogramming in R
 ### <a href='https://github.com/janusvm'>Janus Valberg-Madsen</a>
-### 2018-06-04 @ Aalborg R User Group
+### 2018-06-06 @ Aalborg R User Group
 
 ---
 
@@ -36,25 +36,118 @@ background-size: cover
 
 ---
 
+
+```r
+x &lt;- seq(0, 2 * pi, length.out = 100)
+plot(x, sin(x), type = "l")
+```
+
+&lt;img src="figs/plot-labels-1.svg" style="display: block; margin: auto;" /&gt;
+
+--
+
+How does `plot` know how to label the axes?
+
+???
+- I didn't pass the `xlab` and `ylab` arguments
+- So where did these labels come from?
+- Answer: from the function arguments themselves
+
+---
+
+layout: true
+name: substitute
+
+???
+- Lets take a look under the hood of `plot.default`
+- Tip: inspect source code of function with
+  + `body(fun)`
+  + In RStudio: place cursor in function name and press F2
+- (this is not the actual function definition, just the part we care about today)
+
+---
+
+template: substitute
+
+
+```r
+function (x, y = NULL, ...) {
+  # ...
+  xlabel &lt;- if (!missing(x)) 
+    deparse(substitute(x))
+  ylabel &lt;- if (!missing(y)) 
+    deparse(substitute(y))
+  # ...
+}
+```
+
+---
+count: false
+template: substitute
+
+
+```r
+function (x, y = NULL, ...) {
+  # ...
+  xlabel &lt;- if (!missing(x)) 
+*   deparse(substitute(x))
+  ylabel &lt;- if (!missing(y)) 
+*   deparse(substitute(y))
+  # ...
+}
+```
+
+???
+- These are the lines that produce the labels
+
+--
+
+- `deparse`: turns unevaluated expressions into strings
+
+???
+- As the name implies, it does the opposite of parsing: expr -&gt; string
+
+--
+
+- `substitute`: returns the *parse tree* for the expression
+
+???
+- This is where the magic happens
+
+--
+
+Expression? But `x` and `y` are just numeric vectors 
+--
+.small[... right?]
+
+---
+name: promises
 class: center, middle, inverse
 background-image: url(./img/black-25.png), url(./img/promise.jpg)
 background-size: cover
+layout: false
 
 # Promises
+
+
+???
+- Wrong. `x` and `y` are _promises_
+- R is _lazy_
+  + It makes _promises_ to evaluate your function arguments
+  + but it won't _actually_ do it, until it is absolutely necessary
+- What _is_ a promise?
+- From the R language definition:
+  + Promise objects are part of R’s lazy evaluation mechanism
+  + They contain three slots: a value, an expression, and an environment 
+  + When a function is called the arguments are matched and then each of the formal arguments is bound to a promise
+  + The expression that was given for that formal argument and a pointer to the environment the function was called from are stored in the promise
 
 ---
 
 
 ```r
-library(rlang)
-```
-
---
-
-
-```r
-e1 &lt;- expr(y &lt;- 2 * x)
-e2 &lt;- expr(`&lt;-`(y, `*`(2, x)))
+e1 &lt;- quote(y &lt;- 2 * x)
+e2 &lt;- quote(`&lt;-`(y, `*`(2, x)))
 identical(e1, e2)
 ```
 
@@ -84,8 +177,8 @@ The orange squares represent calls; first child is the function being called, su
 .pull-left[
 
 ```r
-e1 &lt;- expr(1)
-e2 &lt;- expr(({1}))
+e1 &lt;- quote(1)
+e2 &lt;- quote(({1}))
 ```
 ]
 
@@ -98,8 +191,8 @@ count: false
 .pull-left[
 
 ```r
-e1 &lt;- expr(1)
-e2 &lt;- expr(({1}))
+e1 &lt;- quote(1)
+e2 &lt;- quote(({1}))
 ```
 
 

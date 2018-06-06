@@ -8,6 +8,10 @@
   font-weight: 400;
 }
 
+.remark-inline-code {
+  font-size: 110%;
+}
+
 .remark-code-line-highlighted {
   color: rgb(253, 151, 31);
   background-color: rgba(0, 0, 0, 0);
@@ -25,6 +29,10 @@
 
 
 /* ----- STYLE ----- */
+
+/* Custom style tags */
+.large { font-size: 130% }
+.small { font-size: 70% }
 
 /* Remove slide number from inverse slides */
 .inverse .remark-slide-number {
