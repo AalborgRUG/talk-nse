@@ -62,8 +62,8 @@ How does `plot` know how to label the axes?
 - So where did these labels come from?
 - Answer: from the function arguments themselves
 
----
 
+---
 layout: true
 name: substitute
 
@@ -74,8 +74,8 @@ name: substitute
   + In RStudio: place cursor in function name and press F2
 - (this is not the actual function definition, just the part we care about today)
 
----
 
+---
 template: substitute
 
 ```{r, eval=FALSE}
@@ -88,6 +88,7 @@ function (x, y = NULL, ...) {
   # ...
 }
 ```
+
 
 ---
 count: false
@@ -127,6 +128,7 @@ Expression? But `x` and `y` are just numeric vectors
 --
 .small[... right?]
 
+
 ---
 name: promises
 class: center, middle, inverse
@@ -149,6 +151,7 @@ layout: false
   + When a function is called the arguments are matched and then each of the formal arguments is bound to a promise
   + The expression that was given for that formal argument and a pointer to the environment the function was called from are stored in the promise
 
+
 ---
 
 ```{r}
@@ -166,6 +169,7 @@ knitr::include_graphics(fig("simple-ast.svg"))
 ???
 Here is a graphical representation of what's going on, called an _abstract syntax tree (AST)_.  
 The orange squares represent calls; first child is the function being called, subsequent children are arguments.
+
 
 ---
 
@@ -185,8 +189,8 @@ e2 <- quote(({1}))
 ```
 ]
 
----
 
+---
 count: false
 
 # Everything is a function
@@ -211,6 +215,7 @@ knitr::include_graphics(fig("parens-ast.svg"))
 ```
 ]
 
+
 ---
 name: applications
 class: center, middle, inverse
@@ -220,6 +225,7 @@ class: center, middle, inverse
 ???
 
 - time to look at some examples
+
 
 ---
 
@@ -271,6 +277,7 @@ my_count2(iris, Species)
 ```
 ]
 
+
 ---
 
 ## `r emo::ji("package")` dev overview
@@ -279,6 +286,7 @@ Action | `base` | `rlang`
 --- | --- | ---
 Quote input as-is | `quote` | `expr`, `quo`
 Quote user input | `substitute` | `enexpr`, `enquo`
+
 
 ---
 name: tips
@@ -300,6 +308,7 @@ name: tips
 ???
 - more tricks here...
 
+
 ---
 name: links
 
@@ -317,8 +326,8 @@ Contact [Ege](mailto:rubak@math.aau.dk) to request membership
 
 `r emo::ji("package")` [jsvm](https://github.com/janusvm/jsvm), used for producing the AST figures (developed by yours truly `r {emo::ji("smirk")}`)
 
----
 
+---
 class: inverse, middle, center
 
 # `r {emo::ji("sparkles")}` Thank you for your time `r {emo::ji("sparkles")}`
