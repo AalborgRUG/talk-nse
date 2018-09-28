@@ -4,9 +4,9 @@
 # Main files
 SLIDES = index
 CSS = custom.css
-NOTES = notes
 
 # Directories
+SUBDIR = input
 RDIR = scripts
 FIGDIR = figs
 
@@ -15,6 +15,9 @@ R_OPTS = --slave --vanilla
 
 
 # Source files -----------------------------------------------------------------
+
+# Child files
+RMD_INPUT := $(wildcard $(SUBDIR)/*.Rmd)
 
 # R scripts
 R_FIG := $(wildcard $(RDIR)/figs/*.R)
@@ -37,8 +40,8 @@ presentation: $(SLIDES).html
 	firefox $< &
 
 slides: $(SLIDES).html
-$(SLIDES).html: $(SLIDES).Rmd $(CSS) $(OUT)
-	Rscript -e "rmarkdown::render('${SLIDES}.Rmd', 'xaringan::moon_reader')"
+$(SLIDES).html: $(SLIDES).Rmd $(RMD_INPUT) $(CSS) $(OUT)
+	Rscript -e "rmarkdown::render('$<', 'xaringan::moon_reader')"
 
 figures: $(FIG_OUT)
 

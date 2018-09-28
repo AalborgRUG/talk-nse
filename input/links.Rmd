@@ -1,0 +1,18 @@
+name: links
+
+# Links
+
+
+`r emo::ji("closed_book")` [Advanced R](https://adv-r.hadley.nz) by Hadley Wickham (online book)
+
+- in particular, the chapter on [Metaprogramming](https://adv-r.hadley.nz/meta.html)
+
+`r fa("github")` [repository](https://github.com/AalborgRUG/talk-nse) for this presentation with source code
+
+`r fa("github")` [AalborgRUG](https://github.com/AalborgRUG), a GitHub Organisation for this R User Group meant for sharing slides, notes, and code.
+Contact [Ege](mailto:rubak@math.aau.dk) to request membership
+
+`r emo::ji("package")` [xaringan](https://github.com/yihui/xaringan), used to make these slides (`remark.js` wrapper for R)
+
+`r emo::ji("package")` [jsvm](https://github.com/janusvm/jsvm), used for producing the AST figures (developed by yours truly `r {emo::ji("smirk")}`)
+

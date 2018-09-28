@@ -1,0 +1,14 @@
+name: applications
+class: center, middle, inverse
+
+# Applications
+
+???
+
+- time to look at some examples
+
+---
+<!-- Programming with tidyverse ------------------------------------------------------------------->
+
+```{r tidyverse, child = "tidyverse.Rmd"}
+```

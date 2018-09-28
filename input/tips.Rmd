@@ -1,0 +1,19 @@
+name: tips
+
+# Tips & tricks
+
+--
+
+- Appease `R CMD check` with `utils::globalVariables(c("foo", "bar", "baz"))`
+
+???
+- some usages of NSE might make `R CMD check` think you have uninitialised variables
+- `utils::globalVariables` tells `R CMD check` that it's fine
+
+--
+
+- ...
+
+???
+- more tricks here...
+

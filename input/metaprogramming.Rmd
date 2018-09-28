@@ -1,0 +1,190 @@
+name: metaprogramming
+class: center, middle, inverse
+background-image: url(./img/black-50.png), url(./img/code.jpg)
+background-size: cover
+
+# What is metaprogramming?
+
+???
+According to Wikipedia:
+
+> Metaprogramming is a programming technique in which computer programs have the
+> ability to treat programs as their data. It means that a program can be
+> designed to read, generate, analyse or transform other programs, and even
+> modify itself while running.
+
+
+- when code can inspect and modify other code
+- in other words, when _code becomes data_
+- 
+
+
+---
+
+```{r plot-labels, fig.height=4, fig.width=6}
+x <- seq(0, 2 * pi, length.out = 100)
+plot(x, sin(x), type = "l")
+```
+
+--
+
+How does `plot` know how to label the axes?
+
+???
+- I didn't pass the `xlab` and `ylab` arguments
+- So where did these labels come from?
+- Answer: from the function arguments themselves
+
+
+---
+layout: true
+name: substitute
+
+???
+- Lets take a look under the hood of `plot.default`
+- Tip: inspect source code of function with
+  + `body(fun)`
+  + In RStudio: place cursor in function name and press F2
+- (this is not the actual function definition, just the part we care about today)
+
+
+---
+template: substitute
+
+```{r, eval=FALSE}
+function (x, y = NULL, ...) {
+  # ...
+  xlabel <- if (!missing(x)) 
+    deparse(substitute(x))
+  ylabel <- if (!missing(y)) 
+    deparse(substitute(y))
+  # ...
+}
+```
+
+
+---
+count: false
+template: substitute
+
+```{r, eval=FALSE}
+function (x, y = NULL, ...) {
+  # ...
+  xlabel <- if (!missing(x)) 
+    deparse(substitute(x))  #<<
+  ylabel <- if (!missing(y)) 
+    deparse(substitute(y))  #<<
+  # ...
+}
+```
+
+???
+- These are the lines that produce the labels
+
+--
+
+- `deparse`: turns unevaluated expressions into strings
+
+???
+- As the name implies, it does the opposite of parsing: expr -> string
+
+--
+
+- `substitute`: returns the *parse tree* for the expression
+
+???
+- This is where the magic happens
+
+--
+
+Expression? But `x` and `y` are just numeric vectors 
+--
+.small[... right?]
+
+
+---
+name: promises
+class: center, middle, inverse
+background-image: url(./img/black-25.png), url(./img/promise.jpg)
+background-size: cover
+layout: false
+
+# Promises
+
+
+???
+- Wrong. `x` and `y` are _promises_
+- R is _lazy_
+  + It makes _promises_ to evaluate your function arguments
+  + but it won't _actually_ do it, until it is absolutely necessary
+- What _is_ a promise?
+- From the R language definition:
+  + Promise objects are part of R’s lazy evaluation mechanism
+  + They contain three slots: a value, an expression, and an environment 
+  + When a function is called the arguments are matched and then each of the formal arguments is bound to a promise
+  + The expression that was given for that formal argument and a pointer to the environment the function was called from are stored in the promise
+
+
+---
+
+```{r}
+e1 <- quote(y <- 2 * x)
+e2 <- quote(`<-`(y, `*`(2, x)))
+identical(e1, e2)
+```
+
+--
+
+```{r, echo=FALSE, fig.align='center', out.width='50%'}
+knitr::include_graphics(fig("simple-ast.svg"))
+```
+
+???
+Here is a graphical representation of what's going on, called an _abstract syntax tree (AST)_.  
+The orange squares represent calls; first child is the function being called, subsequent children are arguments.
+
+
+---
+
+```lisp
+(setq y (* 2 x))
+```
+
+
+---
+
+# Everything is a function
+
+.pull-left[
+```{r}
+e1 <- quote(1)
+e2 <- quote(({1}))
+```
+]
+
+
+---
+count: false
+
+# Everything is a function
+
+.pull-left[
+```{r}
+e1 <- quote(1)
+e2 <- quote(({1}))
+```
+
+```{r}
+identical(eval(e1), eval(e2))
+identical(e1, e2)
+```
+]
+
+--
+
+.pull-right[
+```{r, echo=FALSE, out.width='75%'}
+knitr::include_graphics(fig("parens-ast.svg"))
+```
+]
+

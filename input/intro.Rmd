@@ -1,0 +1,28 @@
+# My background with programming and R
+
+- Tampered a little with Android during my STX years (2009-2012)
+
+- Introduced to Python for 2nd semester project at AAU (spring 2014)
+
+- Introduced to R for for 5th semester course in numerical optimisation (autumn 2015)
+
+- Used R extensively since then, both for university projects and as part of my former student assistant job at NEAS Energy A/S (2016-2018)
+
+
+---
+
+# Topics in this presentation
+
+1. What is metaprogramming?
+
+2. How to do it in practise
+
+3. Case studies
+
+
+???
+1. An introduction to metaprogramming, explaining the concepts
+
+2. An in-depth look at how to (as a developer) use it in R
+
+3. Showcase some examples where it makes sense to use, including a live demo

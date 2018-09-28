@@ -8,7 +8,7 @@ output:
     css: [default, default-fonts, custom.css]
     lib_dir: libs
     nature:
-      highlightStyle: monokai-sublime  # gruvbox-light
+      highlightStyle: monokai-sublime
       highlightLines: true
       countIncrementalSlides: false
 ---
@@ -21,7 +21,8 @@ knitr::opts_chunk$set(
   message = FALSE,
   warning = FALSE,
   error = FALSE,
-  fig.align = 'center',
+  dev = "svg",
+  fig.align = "center",
   fig.path = "figs/"
 )
 
@@ -35,299 +36,28 @@ error_print <- function(expr) {
 }
 ```
 
-class: center, middle, inverse
-background-image: url(./img/black-50.png), url(./img/code.jpg)
-background-size: cover
-
-# What is metaprogramming?
-
-???
-- when code can inspect and modify other code
-- in other words, when _code becomes data_
-- 
+```{r intro, child = "input/intro.Rmd"}
+```
 
 ---
 
-```{r plot-labels, dev='svg', fig.height=4, fig.width=6}
-x <- seq(0, 2 * pi, length.out = 100)
-plot(x, sin(x), type = "l")
+```{r metaprogramming, child = "input/metaprogramming.Rmd"}
 ```
-
---
-
-How does `plot` know how to label the axes?
-
-???
-- I didn't pass the `xlab` and `ylab` arguments
-- So where did these labels come from?
-- Answer: from the function arguments themselves
-
-
----
-layout: true
-name: substitute
-
-???
-- Lets take a look under the hood of `plot.default`
-- Tip: inspect source code of function with
-  + `body(fun)`
-  + In RStudio: place cursor in function name and press F2
-- (this is not the actual function definition, just the part we care about today)
-
-
----
-template: substitute
-
-```{r, eval=FALSE}
-function (x, y = NULL, ...) {
-  # ...
-  xlabel <- if (!missing(x)) 
-    deparse(substitute(x))
-  ylabel <- if (!missing(y)) 
-    deparse(substitute(y))
-  # ...
-}
-```
-
-
----
-count: false
-template: substitute
-
-```{r, eval=FALSE}
-function (x, y = NULL, ...) {
-  # ...
-  xlabel <- if (!missing(x)) 
-    deparse(substitute(x))  #<<
-  ylabel <- if (!missing(y)) 
-    deparse(substitute(y))  #<<
-  # ...
-}
-```
-
-???
-- These are the lines that produce the labels
-
---
-
-- `deparse`: turns unevaluated expressions into strings
-
-???
-- As the name implies, it does the opposite of parsing: expr -> string
-
---
-
-- `substitute`: returns the *parse tree* for the expression
-
-???
-- This is where the magic happens
-
---
-
-Expression? But `x` and `y` are just numeric vectors 
---
-.small[... right?]
-
-
----
-name: promises
-class: center, middle, inverse
-background-image: url(./img/black-25.png), url(./img/promise.jpg)
-background-size: cover
-layout: false
-
-# Promises
-
-
-???
-- Wrong. `x` and `y` are _promises_
-- R is _lazy_
-  + It makes _promises_ to evaluate your function arguments
-  + but it won't _actually_ do it, until it is absolutely necessary
-- What _is_ a promise?
-- From the R language definition:
-  + Promise objects are part of R’s lazy evaluation mechanism
-  + They contain three slots: a value, an expression, and an environment 
-  + When a function is called the arguments are matched and then each of the formal arguments is bound to a promise
-  + The expression that was given for that formal argument and a pointer to the environment the function was called from are stored in the promise
-
 
 ---
 
-```{r}
-e1 <- quote(y <- 2 * x)
-e2 <- quote(`<-`(y, `*`(2, x)))
-identical(e1, e2)
+```{r applications, child = "input/applications.Rmd"}
 ```
-
---
-
-```{r, echo=FALSE, fig.align='center', out.width='50%'}
-knitr::include_graphics(fig("simple-ast.svg"))
-```
-
-???
-Here is a graphical representation of what's going on, called an _abstract syntax tree (AST)_.  
-The orange squares represent calls; first child is the function being called, subsequent children are arguments.
-
 
 ---
 
-```lisp
-(setq y (* 2 x))
+```{r tips, child = "input/tips.Rmd"}
 ```
-
 
 ---
 
-# Everything is a function
-
-.pull-left[
-```{r}
-e1 <- quote(1)
-e2 <- quote(({1}))
+```{r links, child = "input/links.Rmd"}
 ```
-]
-
-
----
-count: false
-
-# Everything is a function
-
-.pull-left[
-```{r}
-e1 <- quote(1)
-e2 <- quote(({1}))
-```
-
-```{r}
-identical(eval(e1), eval(e2))
-identical(e1, e2)
-```
-]
-
---
-
-.pull-right[
-```{r, echo=FALSE, out.width='75%'}
-knitr::include_graphics(fig("parens-ast.svg"))
-```
-]
-
-
----
-name: applications
-class: center, middle, inverse
-
-# Applications
-
-???
-
-- time to look at some examples
-
-
----
-
-# Programming with tidyverse
-
-```{r, include=FALSE}
-library(tidyverse, quietly = TRUE)
-library(rlang)
-```
-
---
-
-.pull-left[
-- Problem: `tidyverse` functions are made for interactive use/scripting
-
-```{r}
-my_count <- 
-  function(data, group_var) {
-  data %>% 
-    group_by(group_var) %>% 
-    tally()
-}
-```
-```{r, eval=FALSE}
-my_count(iris, Species)
-```
-
-```{r, echo=FALSE}
-error_print(my_count(iris, Species))
-```
-]
-
---
-
-.pull-right[
-- Solution: capture argument and evaluate in the correct context
-
-```{r}
-my_count2 <- 
-  function(data, group_var) {
-    group_var <- enquo(group_var)  #<<
-    data %>% 
-      group_by(!! group_var) %>% 
-      tally()
-  }
-```
-```{r}
-my_count2(iris, Species)
-```
-]
-
-
----
-
-## `r emo::ji("package")` dev overview
-
-Action | `base` | `rlang`
---- | --- | ---
-Quote input as-is | `quote` | `expr`, `quo`
-Quote user input | `substitute` | `enexpr`, `enquo`
-
-
----
-name: tips
-
-# Tips & tricks
-
---
-
-- Appease `R CMD check` with `utils::globalVariables(c("foo", "bar", "baz"))`
-
-???
-- some usages of NSE might make `R CMD check` think you have uninitialised variables
-- `utils::globalVariables` tells `R CMD check` that it's fine
-
---
-
-- ...
-
-???
-- more tricks here...
-
-
----
-name: links
-
-# Links
-
-
-`r emo::ji("closed_book")` [Advanced R](https://adv-r.hadley.nz) by Hadley Wickham (online book)
-
-- in particular, the chapter on [Metaprogramming](https://adv-r.hadley.nz/meta.html)
-
-`r fa("github")` [repository](https://github.com/AalborgRUG/talk-nse) for this presentation with source code
-
-`r fa("github")` [AalborgRUG](https://github.com/AalborgRUG), a GitHub Organisation for this R User Group meant for sharing slides, notes, and code.
-Contact [Ege](mailto:rubak@math.aau.dk) to request membership
-
-`r emo::ji("package")` [xaringan](https://github.com/yihui/xaringan), used to make these slides (`remark.js` wrapper for R)
-
-`r emo::ji("package")` [jsvm](https://github.com/janusvm/jsvm), used for producing the AST figures (developed by yours truly `r {emo::ji("smirk")}`)
-
 
 ---
 class: inverse, middle, center

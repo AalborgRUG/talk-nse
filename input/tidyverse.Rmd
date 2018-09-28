@@ -1,0 +1,58 @@
+# Programming with tidyverse
+
+```{r, include=FALSE}
+library(tidyverse, quietly = TRUE)
+library(rlang)
+```
+
+--
+
+.pull-left[
+- Problem: `tidyverse` functions are made for interactive use
+
+```{r}
+my_count <- 
+  function(data, group_var) {
+  data %>% 
+    group_by(group_var) %>% 
+    tally()
+}
+```
+```{r, eval=FALSE}
+my_count(iris, Species)
+```
+
+```{r, echo=FALSE}
+error_print(my_count(iris, Species))
+```
+]
+
+--
+
+.pull-right[
+- Solution: capture argument and evaluate in the correct context
+
+```{r}
+my_count2 <- 
+  function(data, group_var) {
+    group_var <- enquo(group_var)  #<<
+    data %>% 
+      group_by(!! group_var) %>% 
+      tally()
+  }
+```
+```{r}
+my_count2(iris, Species)
+```
+]
+
+
+---
+
+## `r emo::ji("package")` dev overview
+
+Action | `base` | `rlang`
+--- | --- | ---
+Quote input as-is | `quote` | `expr`, `quo`
+Quote user input | `substitute` | `enexpr`, `enquo`
+
