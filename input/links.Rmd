@@ -9,8 +9,8 @@ name: links
 
 `r fa("github")` [repository](https://github.com/AalborgRUG/talk-nse) for this presentation with source code
 
-`r fa("github")` [AalborgRUG](https://github.com/AalborgRUG), a GitHub Organisation for this R User Group meant for sharing slides, notes, and code.
-Contact [Ege](mailto:rubak@math.aau.dk) to request membership
+`r fa("github")` [AalborgRUG](https://github.com/AalborgRUG), a GitHub Organisation for this R User Group meant for sharing slides, notes, and code
+- contact [Ege](mailto:rubak@math.aau.dk) to request membership
 
 `r emo::ji("package")` [xaringan](https://github.com/yihui/xaringan), used to make these slides (`remark.js` wrapper for R)
 

@@ -14,7 +14,7 @@
 
 .remark-code-line-highlighted {
   color: rgb(253, 151, 31);
-  background-color: rgba(0, 0, 0, 0);
+  background-color: #75715e; /* rgba(0, 0, 0, 0); */
   font-weight: 700;
 }
 

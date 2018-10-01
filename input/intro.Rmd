@@ -1,6 +1,6 @@
-# My background with programming and R
+## My background with programming and R
 
-- Tampered a little with Android during my STX years (2009-2012)
+- Tampered a little with Android (Java) during my STX years (2009-2012)
 
 - Introduced to Python for 2nd semester project at AAU (spring 2014)
 
@@ -11,7 +11,7 @@
 
 ---
 
-# Topics in this presentation
+## Topics in this presentation
 
 1. What is metaprogramming?
 

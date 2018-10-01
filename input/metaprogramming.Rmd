@@ -6,34 +6,44 @@ background-size: cover
 # What is metaprogramming?
 
 ???
+
+Answer: it's the ability to compute on the language itself
+
 According to Wikipedia:
 
-> Metaprogramming is a programming technique in which computer programs have the
-> ability to treat programs as their data. It means that a program can be
-> designed to read, generate, analyse or transform other programs, and even
-> modify itself while running.
+> Metaprogramming is a programming technique in which computer programs have the ability to treat programs as their data. 
+> It means that a program can be designed to read, generate, analyse or transform other programs, and even modify itself while running.
 
-
-- when code can inspect and modify other code
-- in other words, when _code becomes data_
-- 
-
+In R, this happens in many situations
 
 ---
 
-```{r plot-labels, fig.height=4, fig.width=6}
+```r
 x <- seq(0, 2 * pi, length.out = 100)
 plot(x, sin(x), type = "l")
 ```
+
+???
+Here is an example in which an R function uses the _code_ given for its arguments in addition to their values
+
+--
+
+```{r plot-labels, fig.height=4, fig.width=6, echo=FALSE}
+x <- seq(0, 2 * pi, length.out = 100)
+plot(x, sin(x), type = "l")
+```
+
+???
+Just a regular old plot using the base R `plot` function
 
 --
 
 How does `plot` know how to label the axes?
 
 ???
-- I didn't pass the `xlab` and `ylab` arguments
+- I didn't pass any label-related arguments
 - So where did these labels come from?
-- Answer: from the function arguments themselves
+- Answer: **from the function arguments themselves**
 
 
 ---
@@ -41,25 +51,38 @@ layout: true
 name: substitute
 
 ???
-- Lets take a look under the hood of `plot.default`
-- Tip: inspect source code of function with
-  + `body(fun)`
-  + In RStudio: place cursor in function name and press F2
-- (this is not the actual function definition, just the part we care about today)
+Lets take a look under the hood of `plot.default`
 
+Tip: inspect source code of function with
+
+- `body(fun)`
+- `fun` in console (without parentheses)
+- In RStudio: place cursor in function name and press F2
+
+As we can see from the argument list, you can pass axis labels explicitly, but you seemingly don't have to
 
 ---
 template: substitute
 
+```console
+> plot.default
+```
 ```{r, eval=FALSE}
-function (x, y = NULL, ...) {
-  # ...
-  xlabel <- if (!missing(x)) 
-    deparse(substitute(x))
-  ylabel <- if (!missing(y)) 
-    deparse(substitute(y))
-  # ...
-}
+function (x, y = NULL, type = "p", xlim = NULL, ylim = NULL, 
+    log = "", main = NULL, sub = NULL, xlab = NULL, ylab = NULL, 
+    ann = par("ann"), axes = TRUE, frame.plot = axes, panel.first = NULL, 
+    panel.last = NULL, asp = NA, ...) 
+{
+    localAxis <- function(..., col, bg, pch, cex, lty, lwd) Axis(...)
+    localBox <- function(..., col, bg, pch, cex, lty, lwd) box(...)
+    localWindow <- function(..., col, bg, pch, cex, lty, lwd) plot.window(...)
+    localTitle <- function(..., col, bg, pch, cex, lty, lwd) title(...)
+    xlabel <- if (!missing(x)) 
+        deparse(substitute(x))
+    ylabel <- if (!missing(y)) 
+        deparse(substitute(y))
+    xy <- xy.coords(x, y, xlabel, ylabel, log)
+    # ...
 ```
 
 
@@ -67,19 +90,29 @@ function (x, y = NULL, ...) {
 count: false
 template: substitute
 
+```console
+> plot.default
+```
 ```{r, eval=FALSE}
-function (x, y = NULL, ...) {
-  # ...
-  xlabel <- if (!missing(x)) 
-    deparse(substitute(x))  #<<
-  ylabel <- if (!missing(y)) 
-    deparse(substitute(y))  #<<
-  # ...
-}
+function (x, y = NULL, type = "p", xlim = NULL, ylim = NULL, 
+    log = "", main = NULL, sub = NULL, xlab = NULL, ylab = NULL, 
+    ann = par("ann"), axes = TRUE, frame.plot = axes, panel.first = NULL, 
+    panel.last = NULL, asp = NA, ...) 
+{
+    localAxis <- function(..., col, bg, pch, cex, lty, lwd) Axis(...)
+    localBox <- function(..., col, bg, pch, cex, lty, lwd) box(...)
+    localWindow <- function(..., col, bg, pch, cex, lty, lwd) plot.window(...)
+    localTitle <- function(..., col, bg, pch, cex, lty, lwd) title(...)
+    xlabel <- if (!missing(x)) 
+        deparse(substitute(x))  #<<
+    ylabel <- if (!missing(y)) 
+        deparse(substitute(y))  #<<
+    xy <- xy.coords(x, y, xlabel, ylabel, log)
+    # ...
 ```
 
 ???
-- These are the lines that produce the labels
+These are the lines that produce the axis labels 
 
 --
 
@@ -93,14 +126,7 @@ function (x, y = NULL, ...) {
 - `substitute`: returns the *parse tree* for the expression
 
 ???
-- This is where the magic happens
-
---
-
-Expression? But `x` and `y` are just numeric vectors 
---
-.small[... right?]
-
+- Expression? But `x` and `y` are just numeric vectors, right?
 
 ---
 name: promises
@@ -124,6 +150,39 @@ layout: false
   + When a function is called the arguments are matched and then each of the formal arguments is bound to a promise
   + The expression that was given for that formal argument and a pointer to the environment the function was called from are stored in the promise
 
+---
+
+## Function arguments are lazy
+
+```{r}
+error_msg <- "Uh oh! You friccin moron. You just got BEANED!!!"
+
+f <- function(arg) {
+  print("Nothing to see here...")
+}
+
+f(stop(error_msg))
+```
+
+???
+Here's an example of lazy evaluation in action:
+
+- The function `f` takes an argument `arg`, but doesn't use it for anything
+- Therefore, `arg` isn't ever evaluated, and we don't get an error
+
+--
+
+```{r, error=TRUE}
+f <- function(arg) {
+  expr
+  print("Looks like we made it")
+}
+
+f(stop(error_msg))
+```
+
+???
+However, if the argument is used for _anything_, it forces evaluation, and we get an error
 
 ---
 
@@ -153,7 +212,7 @@ The orange squares represent calls; first child is the function being called, su
 
 ---
 
-# Everything is a function
+## Everything is a function
 
 .pull-left[
 ```{r}
@@ -166,7 +225,7 @@ e2 <- quote(({1}))
 ---
 count: false
 
-# Everything is a function
+## Everything is a function
 
 .pull-left[
 ```{r}

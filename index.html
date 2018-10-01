@@ -6,7 +6,9 @@
     <meta name="author" content="Janus Valberg-Madsen" />
     <link href="libs/remark-css/default.css" rel="stylesheet" />
     <link href="libs/remark-css/default-fonts.css" rel="stylesheet" />
-    <link href="libs/font-awesome/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="libs/font-awesome/css/fa-svg-with-js.css" rel="stylesheet" />
+    <script src="libs/font-awesome/js/fontawesome-all.min.js"></script>
+    <script src="libs/font-awesome/js/fa-v4-shims.min.js"></script>
     <link rel="stylesheet" href="custom.css" type="text/css" />
   </head>
   <body>
@@ -24,9 +26,9 @@ class: center, middle, inverse, title-slide
 
 
 
-# My background with programming and R
+## My background with programming and R
 
-- Tampered a little with Android during my STX years (2009-2012)
+- Tampered a little with Android (Java) during my STX years (2009-2012)
 
 - Introduced to Python for 2nd semester project at AAU (spring 2014)
 
@@ -37,7 +39,7 @@ class: center, middle, inverse, title-slide
 
 ---
 
-# Topics in this presentation
+## Topics in this presentation
 
 1. What is metaprogramming?
 
@@ -64,37 +66,41 @@ background-size: cover
 # What is metaprogramming?
 
 ???
+
+Answer: it's the ability to compute on the language itself
+
 According to Wikipedia:
 
-&gt; Metaprogramming is a programming technique in which computer programs have the
-&gt; ability to treat programs as their data. It means that a program can be
-&gt; designed to read, generate, analyse or transform other programs, and even
-&gt; modify itself while running.
+&gt; Metaprogramming is a programming technique in which computer programs have the ability to treat programs as their data. 
+&gt; It means that a program can be designed to read, generate, analyse or transform other programs, and even modify itself while running.
 
-
-- when code can inspect and modify other code
-- in other words, when _code becomes data_
-- 
-
+In R, this happens in many situations
 
 ---
-
 
 ```r
 x &lt;- seq(0, 2 * pi, length.out = 100)
 plot(x, sin(x), type = "l")
 ```
 
+???
+Here is an example in which an R function uses the _code_ given for its arguments in addition to their values
+
+--
+
 &lt;img src="figs/plot-labels-1.svg" style="display: block; margin: auto;" /&gt;
+
+???
+Just a regular old plot using the base R `plot` function
 
 --
 
 How does `plot` know how to label the axes?
 
 ???
-- I didn't pass the `xlab` and `ylab` arguments
+- I didn't pass any label-related arguments
 - So where did these labels come from?
-- Answer: from the function arguments themselves
+- Answer: **from the function arguments themselves**
 
 
 ---
@@ -102,26 +108,39 @@ layout: true
 name: substitute
 
 ???
-- Lets take a look under the hood of `plot.default`
-- Tip: inspect source code of function with
-  + `body(fun)`
-  + In RStudio: place cursor in function name and press F2
-- (this is not the actual function definition, just the part we care about today)
+Lets take a look under the hood of `plot.default`
 
+Tip: inspect source code of function with
+
+- `body(fun)`
+- `fun` in console (without parentheses)
+- In RStudio: place cursor in function name and press F2
+
+As we can see from the argument list, you can pass axis labels explicitly, but you seemingly don't have to
 
 ---
 template: substitute
 
+```console
+&gt; plot.default
+```
 
 ```r
-function (x, y = NULL, ...) {
-  # ...
-  xlabel &lt;- if (!missing(x)) 
-    deparse(substitute(x))
-  ylabel &lt;- if (!missing(y)) 
-    deparse(substitute(y))
-  # ...
-}
+function (x, y = NULL, type = "p", xlim = NULL, ylim = NULL, 
+    log = "", main = NULL, sub = NULL, xlab = NULL, ylab = NULL, 
+    ann = par("ann"), axes = TRUE, frame.plot = axes, panel.first = NULL, 
+    panel.last = NULL, asp = NA, ...) 
+{
+    localAxis &lt;- function(..., col, bg, pch, cex, lty, lwd) Axis(...)
+    localBox &lt;- function(..., col, bg, pch, cex, lty, lwd) box(...)
+    localWindow &lt;- function(..., col, bg, pch, cex, lty, lwd) plot.window(...)
+    localTitle &lt;- function(..., col, bg, pch, cex, lty, lwd) title(...)
+    xlabel &lt;- if (!missing(x)) 
+        deparse(substitute(x))
+    ylabel &lt;- if (!missing(y)) 
+        deparse(substitute(y))
+    xy &lt;- xy.coords(x, y, xlabel, ylabel, log)
+    # ...
 ```
 
 
@@ -129,20 +148,30 @@ function (x, y = NULL, ...) {
 count: false
 template: substitute
 
+```console
+&gt; plot.default
+```
 
 ```r
-function (x, y = NULL, ...) {
-  # ...
-  xlabel &lt;- if (!missing(x)) 
-*   deparse(substitute(x))
-  ylabel &lt;- if (!missing(y)) 
-*   deparse(substitute(y))
-  # ...
-}
+function (x, y = NULL, type = "p", xlim = NULL, ylim = NULL, 
+    log = "", main = NULL, sub = NULL, xlab = NULL, ylab = NULL, 
+    ann = par("ann"), axes = TRUE, frame.plot = axes, panel.first = NULL, 
+    panel.last = NULL, asp = NA, ...) 
+{
+    localAxis &lt;- function(..., col, bg, pch, cex, lty, lwd) Axis(...)
+    localBox &lt;- function(..., col, bg, pch, cex, lty, lwd) box(...)
+    localWindow &lt;- function(..., col, bg, pch, cex, lty, lwd) plot.window(...)
+    localTitle &lt;- function(..., col, bg, pch, cex, lty, lwd) title(...)
+    xlabel &lt;- if (!missing(x)) 
+*       deparse(substitute(x))
+    ylabel &lt;- if (!missing(y)) 
+*       deparse(substitute(y))
+    xy &lt;- xy.coords(x, y, xlabel, ylabel, log)
+    # ...
 ```
 
 ???
-- These are the lines that produce the labels
+These are the lines that produce the axis labels 
 
 --
 
@@ -156,14 +185,7 @@ function (x, y = NULL, ...) {
 - `substitute`: returns the *parse tree* for the expression
 
 ???
-- This is where the magic happens
-
---
-
-Expression? But `x` and `y` are just numeric vectors 
---
-.small[... right?]
-
+- Expression? But `x` and `y` are just numeric vectors, right?
 
 ---
 name: promises
@@ -187,6 +209,49 @@ layout: false
   + When a function is called the arguments are matched and then each of the formal arguments is bound to a promise
   + The expression that was given for that formal argument and a pointer to the environment the function was called from are stored in the promise
 
+---
+
+## Function arguments are lazy
+
+
+```r
+error_msg &lt;- "Uh oh! You friccin moron. You just got BEANED!!!"
+
+f &lt;- function(arg) {
+  print("Nothing to see here...")
+}
+
+f(stop(error_msg))
+```
+
+```
+## [1] "Nothing to see here..."
+```
+
+???
+Here's an example of lazy evaluation in action:
+
+- The function `f` takes an argument `arg`, but doesn't use it for anything
+- Therefore, `arg` isn't ever evaluated, and we don't get an error
+
+--
+
+
+```r
+f &lt;- function(arg) {
+  expr
+  print("Looks like we made it")
+}
+
+f(stop(error_msg))
+```
+
+```
+## Error in f(stop(error_msg)): object 'expr' not found
+```
+
+???
+However, if the argument is used for _anything_, it forces evaluation, and we get an error
 
 ---
 
@@ -219,7 +284,7 @@ The orange squares represent calls; first child is the function being called, su
 
 ---
 
-# Everything is a function
+## Everything is a function
 
 .pull-left[
 
@@ -233,7 +298,7 @@ e2 &lt;- quote(({1}))
 ---
 count: false
 
-# Everything is a function
+## Everything is a function
 
 .pull-left[
 
@@ -266,6 +331,55 @@ identical(e1, e2)
 &lt;img src="figs/parens-ast.svg" width="75%" style="display: block; margin: auto;" /&gt;
 ]
 
+
+---
+
+
+name: howto
+class: middle, center, inverse
+
+# How to metaprogram in R
+
+???
+In this section of the talk, we will take a look at the tools available for taking advantage of the lazy nature of R
+
+---
+background-image: url(./img/white-85.png), url(./img/hadley.jpg)
+background-position: left bottom
+background-size: 450px
+
+## The rlang package
+
+
+```r
+# install.packages("rlang")
+library(rlang)
+```
+
+.pull-left[
+### Pros
+
+- Consistent
+
+- Good with `tidyverse`
+]
+
+.pull-right[
+### Cons
+
+- Another dependency
+]
+
+???
+It's a question you ask yourself every time you develop an R package:
+
+&gt; Should I add a dependency that makes it easy or try to make it work with `base`?
+
+- Base R does have some built-in capability of non-standard evaluation (`quote`, `substitute`, etc.)
+- But I will use `rlang` (from the `tidyverse` suite), because:
+  + it's recent
+  + it's consistent
+  + it plays very well with other `tidyverse` packages
 
 ---
 
@@ -391,8 +505,8 @@ name: links
 
 &lt;i class="fa fa-github"&gt;&lt;/i&gt; [repository](https://github.com/AalborgRUG/talk-nse) for this presentation with source code
 
-&lt;i class="fa fa-github"&gt;&lt;/i&gt; [AalborgRUG](https://github.com/AalborgRUG), a GitHub Organisation for this R User Group meant for sharing slides, notes, and code.
-Contact [Ege](mailto:rubak@math.aau.dk) to request membership
+&lt;i class="fa fa-github"&gt;&lt;/i&gt; [AalborgRUG](https://github.com/AalborgRUG), a GitHub Organisation for this R User Group meant for sharing slides, notes, and code
+- contact [Ege](mailto:rubak@math.aau.dk) to request membership
 
 📦 [xaringan](https://github.com/yihui/xaringan), used to make these slides (`remark.js` wrapper for R)
 

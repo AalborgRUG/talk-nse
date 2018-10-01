@@ -28,3 +28,24 @@ Notes for preparing talk for R Usergroup Aalborg on non-standard evaluation and 
 - https://edwinth.github.io/blog/nse/
 - http://www.onceupondata.com/2017/08/12/my-first-steps-into-the-world-of-tidyeval/
 - http://mnielsen.github.io/notes/parentheses/index.html
+
+
+## Presentation outline
+
+- What is metaprogramming?
+- The structure of R's language
+  + Promises
+  + Environments
+  + Lexical scoping
+- How to use nonstandard evaluation
+  + Capturing expressions
+  + Evaluating expressions
+
+- Vocabulary
+  + Expressions
+  + Quoting & unquoting
+  + Parsing & deparsing
+  + Evaluation
+  + Quasiquotation
+  + Quosures
+  

@@ -46,6 +46,11 @@ error_print <- function(expr) {
 
 ---
 
+```{r howto, child = "input/howto.Rmd"}
+```
+
+---
+
 ```{r applications, child = "input/applications.Rmd"}
 ```
 

@@ -1,0 +1,44 @@
+name: howto
+class: middle, center, inverse
+
+# How to metaprogram in R
+
+???
+In this section of the talk, we will take a look at the tools available for taking advantage of the lazy nature of R
+
+---
+background-image: url(./img/white-85.png), url(./img/hadley.jpg)
+background-position: left bottom
+background-size: 450px
+
+## The rlang package
+
+```{r}
+# install.packages("rlang")
+library(rlang)
+```
+
+.pull-left[
+### Pros
+
+- Consistent
+
+- Good with `tidyverse`
+]
+
+.pull-right[
+### Cons
+
+- Another dependency
+]
+
+???
+It's a question you ask yourself every time you develop an R package:
+
+> Should I add a dependency that makes it easy or try to make it work with `base`?
+
+- Base R does have some built-in capability of non-standard evaluation (`quote`, `substitute`, etc.)
+- But I will use `rlang` (from the `tidyverse` suite), because:
+  + it's recent
+  + it's consistent
+  + it plays very well with other `tidyverse` packages

@@ -21,7 +21,7 @@ RMD_INPUT := $(wildcard $(SUBDIR)/*.Rmd)
 
 # R scripts
 R_FIG := $(wildcard $(RDIR)/figs/*.R)
-R_INPUT := $(wildcard $(RDIR)/input/*.R)
+# R_INPUT := $(wildcard $(RDIR)/input/*.R)
 
 # Output files -----------------------------------------------------------------
 
@@ -36,12 +36,13 @@ SVGFIGS := $(wildcard $(FIGDIR)/*.svg)
 # Rules ------------------------------------------------------------------------
 
 # Slideshow
+slides: $(SLIDES).html
+
 presentation: $(SLIDES).html
 	firefox $< &
 
-slides: $(SLIDES).html
-$(SLIDES).html: $(SLIDES).Rmd $(RMD_INPUT) $(CSS) $(OUT)
-	Rscript -e "rmarkdown::render('$<', 'xaringan::moon_reader')"
+$(SLIDES).html: $(SLIDES).Rmd $(RMD_INPUT) $(CSS) $(OUT) deps
+	Rscript $(R_OPTS) -e "rmarkdown::render('$<', 'xaringan::moon_reader')"
 
 figures: $(FIG_OUT)
 
@@ -50,6 +51,8 @@ figures: $(FIG_OUT)
 	Rscript $(R_OPTS) $<
 	touch $@
 
+# Package dependencies
+deps: $(DEPS_OUT)
 
 # Delete figures and out-files
 clean:
