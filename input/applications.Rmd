@@ -5,10 +5,196 @@ class: center, middle, inverse
 
 ???
 
-- time to look at some examples
+Time to look at some examples.
 
 ---
-<!-- Programming with tidyverse ------------------------------------------------------------------->
+class: center, middle
+background-image: url(img/white-85.png), url(img/hadley.jpg)
+background-size: cover
 
-```{r tidyverse, child = "tidyverse.Rmd"}
+## Programming with tidyverse
+
+```{r, include=FALSE}
+library(tidyverse, quietly = TRUE)
+library(rlang)
 ```
+
+???
+NSE is almost synonymous with `tidyverse`, and I'd wager it's where most of us first hears about it.
+
+It's a common problem when you want to program with `tidyverse` packages:  
+they are made for interactive use and uses NSE for syntactic convenience.  
+This makes life difficult for us as developers, however.
+
+- Previously, `tidyverse` functions came in two variants: the regular, and an "underscored" one, where the latter used SE
+- This is no longer the case (the underscored functions were deprecated when the ideas of `rlang` were put into place)
+- Instead, we use the `rlang` functions I've covered with the regular functions
+
+Instead of having special functions that take strings instead of expressions, we provide the arguments as expressions using quasiquotation.
+
+For me, personally, I often saw this during my time as a student assistant at NEAS;  
+
+- Many of my tasks involved creating interactive analytics dashboards with Shiny
+- These would in some way did some data analysis based on user inputs
+- Back then, however, all the things I've been talking about were developing ideas, and I had enough on my plate just learning how to wrangle data, so I never got to _actually_ use these techniques
+- But it serves as a prime example of a situation in which it makes sense
+
+Let's take a look at some scenarios you might find yourself in when programming with `tidyverse`.
+
+---
+
+### Scenario: interactive end user function
+
+.pull-left[
+```{r, eval=FALSE}
+my_count <- function(data, group_var) {
+  data %>% 
+    group_by(group_var) %>% 
+    tally()
+}
+
+my_count(iris, Species)
+```
+```{r, echo=FALSE}
+my_count <- function(data, group_var) data %>% group_by(group_var) %>% tally()
+error_print(my_count(iris, Species))
+```
+]
+
+.pull-right[
+```{r}
+my_count2 <- function(data, group_var) {
+  group_var <- enexpr(group_var)
+  data %>% 
+    group_by(!!group_var) %>% 
+    tally()
+}
+
+my_count2(iris, Species)
+```
+]
+
+???
+## Scenario
+You want to write a function that mimics the style of `tidyverse` functions, i.e. it lets the user type in `group_var` as-is.  
+Supplying `group_var` as-is to `group_by` makes it look for a column literally named `group_var`.
+
+## Solution
+Quote `group_var` and unquote it in the context where it's used
+---
+
+### Scenario: variable selection in e.g. a Shiny app
+
+.pull-left[
+```{r}
+my_select1 <- function(data, vars) {
+  data %>% 
+    select(vars)
+}
+
+df <- tibble(x = 1:5, y = 6:10, 
+             vars = letters[1:5])
+my_vars <- c("x", "y")
+
+my_select1(df, my_vars)
+```
+]
+
+.pull-right[
+```{r}
+my_select2 <- function(data, vars) {
+  vars <- ensyms(vars)
+  data %>% 
+    select(!!!vars)
+}
+
+my_select2(df, my_vars)
+```
+]
+
+???
+## Scenario
+You want to let your users use `dplyr::select` in a Shiny app, where they can pick variables from e.g. a `selectInput`.  
+While `select` _can_ be used with string vectors, you run into trouble if a column in the data has the same name as the vector (contrived, I know).
+
+## Solution
+Turn the vector of strings into a list of symbols with `ensyms` and unquote-splice inside `select`.
+
+---
+
+### Scenario: end user function involving variable assignment 
+
+.pull-left[
+```{r, error=TRUE}
+my_adder1 <- function(data, col1, col2, newcol) {
+  col1 <- ensym(col1)
+  col2 <- ensym(col2)
+  newcol <- ensym(newcol)
+  data %>% 
+    mutate(!!newcol = !!col1 + !!col2)
+}
+
+my_adder1(df, x, y, z)
+```
+
+- .rb[`:=`] : (colon-equals) definition operator that supports unquoting on both the LHS and RHS
+]
+
+.pull-right[
+```{r, error=TRUE}
+my_adder2 <- function(data, col1, col2, newcol) {
+  col1 <- ensym(col1)
+  col2 <- ensym(col2)
+  newcol <- ensym(newcol)
+  data %>% 
+    mutate(!!newcol := !!col1 + !!col2)
+}
+
+my_adder2(df, x, y, z)
+```
+]
+
+???
+## Scenario
+You want to make an interactive function, `tidyverse` style, that lets the user select two columns to add together to a new column, and set a name for it.  
+However, the code `newcol = !!col1 + col2` results in a new column that's always named `newcol`, and unquoting it is invalid syntax.
+
+## Solution
+Use the special colon-equals operator, `:=`
+
+---
+class: center, middle
+
+## Domain specific languages
+
+???
+Another application is DSL: language specialised to a particular application domain
+
+Examples hereof:
+
+- `dplyr` verbs translate directly into SQL code; you can use SQL by only knowing R and `dplyr`
+- The AST figures in this very presentation! I wrote a function that takes an expression as its argument, quotes it, and by traversing and inspecting the AST translates it into TiKZ code, which is then rendered in a template
+
+---
+
+## `r emo::ji("package")` dev overview
+
+Action | `base` | `rlang`
+--- | --- | ---
+Quote input as-is | `quote` | `expr`
+Quote multiple inputs as-is | | `exprs` 
+Quote user input | `substitute` / `bquote` | `enexpr`
+Quote multiple user inputs | | `enexprs`
+Turn string into symbol | `as.name` | `sym` / `ensym`
+Turn multiple strings into symbols | | `syms` / `ensyms`
+Unquote quoted expression(s) | `?bquote` | `!!` / `!!!`
+Evaluate expression | `eval` | `eval_bare`
+Evaluate quosure | | `eval_tidy`
+Deparse expression | `deparse` | `expr_deparse`
+Deparse quosure | | `quo_text` / `quo_label` / `quo_name`
+
+???
+As a closing remark on this part, here is a quick overview of some commonly used `rlang` functions and their `base` counterparts.
+
+Note the `?` on `?bquote` under unquotation.  
+By that I mean that you should check the help file for `bquote` to see how you can get something close to unquotation in `base`.

@@ -28,6 +28,7 @@ Notes for preparing talk for R Usergroup Aalborg on non-standard evaluation and 
 - https://edwinth.github.io/blog/nse/
 - http://www.onceupondata.com/2017/08/12/my-first-steps-into-the-world-of-tidyeval/
 - http://mnielsen.github.io/notes/parentheses/index.html
+- https://stackoverflow.com/questions/514644/what-exactly-is-metaprogramming
 
 
 ## Presentation outline
@@ -35,8 +36,8 @@ Notes for preparing talk for R Usergroup Aalborg on non-standard evaluation and 
 - What is metaprogramming?
 - The structure of R's language
   + Promises
-  + Environments
-  + Lexical scoping
+  + Environments and scoping
+    * Enclosing environments (lexical scoping) vs. calling environments (parent.frame)
 - How to use nonstandard evaluation
   + Capturing expressions
   + Evaluating expressions
@@ -49,3 +50,5 @@ Notes for preparing talk for R Usergroup Aalborg on non-standard evaluation and 
   + Quasiquotation
   + Quosures
   
+"If you wish to make apple pie from scratch, you must first invent the universe" - Carl Sagan
+(alluding to the observation that if you want to metaprogram, you must understand the inner workings of the language)

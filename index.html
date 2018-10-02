@@ -36,32 +36,54 @@ class: center, middle, inverse, title-slide
 
 - Used R extensively since then, both for university projects and as part of my former student assistant job at NEAS Energy A/S (2016-2018)
 
-
 ---
 
-## Topics in this presentation
+## This talk in a nutshell
 
-1. What is metaprogramming?
+1. The structure of the R language
 
-2. How to do it in practise
+2. How to metaprogram in R
 
-3. Case studies
-
+3. Applications
 
 ???
-1. An introduction to metaprogramming, explaining the concepts
+1. In the first part I will dive into the inner workings of R and show you the parts that enable metaprogramming
 
-2. An in-depth look at how to (as a developer) use it in R
+2. In the second part, I will show you an overview the tools you need and what they do
 
-3. Showcase some examples where it makes sense to use, including a live demo
+3. In the last part, I will show you some situations in which metaprogramming comes in handy
+
+---
+layout: false
+
+
+class: center, middle
+layout: true
 
 ---
 
+# What is non-standard evaluation?
 
-name: metaprogramming
-class: center, middle, inverse
-background-image: url(./img/black-50.png), url(./img/code.jpg)
-background-size: cover
+???
+Let's jump right into the central question for this talk: what is NSE?
+
+The quick answer is:
+
+&gt; Functions are said to use NSE when they evaluate one or more of their arguments in a non-standard way.
+
+I don't suppose that really answers the question, though.  
+Given this answer, what then is standard evaluation?
+
+Another, slightly more informative way of putting it is that
+
+&gt; NSE is what we call it when functions use _metaprogramming_
+
+I have titled this talk "Non-Standard Evaluation **and** Metaprogramming in R", but in truth, they aren't really seperate concepts.  
+NSE seems to be a term originating from R circles, but metaprogramming is a paradigm that's certainly not exclusive to R.
+
+So, [go to next slide]
+
+---
 
 # What is metaprogramming?
 
@@ -74,9 +96,41 @@ According to Wikipedia:
 &gt; Metaprogramming is a programming technique in which computer programs have the ability to treat programs as their data. 
 &gt; It means that a program can be designed to read, generate, analyse or transform other programs, and even modify itself while running.
 
-In R, this happens in many situations
+Metaprogramming traces its roots back to the 1940s, where philosopher and logician Willard van Orman Quine introduces the concept of _quasiquotation_ as a linguistic device in formal languages (more on quasiquotation later)
+
+The first programming language to support MP was Lisp in the 1970s.  
+Some of you likely knows some Lisp, especially if you use Emacs.  
+Lisp went **all in** on metaprogramming, making no distinction between code and data.
+
+The computer scientist Paul Graham wrote in his essay "Revenge of the Nerds":
+
+&gt; _Lisp looks strange not so much because it has a strange syntax as because it has no syntax; you express programs directly in the parse trees that get built behind the scenes when other languages are parsed, and these trees are made of lists, which are Lisp data structures._
+
+This is not a talk on Lisp, but R does inherit many ideas from Lisp, such as _parse trees_ and _lexical scoping_ both of which we'll see in a few slides.
 
 ---
+layout: false
+name: r-structure
+class: center, middle, inverse
+background-image: url(./img/black-50.png), url(./img/code.jpg)
+background-size: cover
+
+# The structure of the R language
+
+???
+So let's dive into the meat of it all: how R works
+
+Before we can compute on the language, we have to understand the language we want to compute on.
+
+To quote Carl Sagan,
+
+&gt; _If you wish to make apple pie from scratch, you must first invent the universe_
+
+So we ask ourselves: **how does R work?**
+
+---
+
+
 
 ```r
 x &lt;- seq(0, 2 * pi, length.out = 100)
@@ -84,7 +138,8 @@ plot(x, sin(x), type = "l")
 ```
 
 ???
-Here is an example in which an R function uses the _code_ given for its arguments in addition to their values
+To answer that, let's look at an example.  
+Here is an R function which uses the _code_ given for its arguments in addition to their values
 
 --
 
@@ -116,12 +171,12 @@ Tip: inspect source code of function with
 - `fun` in console (without parentheses)
 - In RStudio: place cursor in function name and press F2
 
-As we can see from the argument list, you can pass axis labels explicitly, but you seemingly don't have to
+As we can see from the argument list, you can pass axis labels explicitly, but you seemingly don't have to.
 
 ---
 template: substitute
 
-```console
+```r
 &gt; plot.default
 ```
 
@@ -148,7 +203,7 @@ function (x, y = NULL, type = "p", xlim = NULL, ylim = NULL,
 count: false
 template: substitute
 
-```console
+```r
 &gt; plot.default
 ```
 
@@ -198,16 +253,22 @@ layout: false
 
 
 ???
-- Wrong. `x` and `y` are _promises_
-- R is _lazy_
-  + It makes _promises_ to evaluate your function arguments
-  + but it won't _actually_ do it, until it is absolutely necessary
-- What _is_ a promise?
-- From the R language definition:
-  + Promise objects are part of R’s lazy evaluation mechanism
-  + They contain three slots: a value, an expression, and an environment 
-  + When a function is called the arguments are matched and then each of the formal arguments is bound to a promise
-  + The expression that was given for that formal argument and a pointer to the environment the function was called from are stored in the promise
+Wrong. `x` and `y` are _promises_
+
+Here we come across one of the many reasons why I like R so much ― it reminds me of myself:
+
+- It is _lazy_
+- It makes _promises_ to evaluate your function arguments
+- but it won't _actually_ do it, until it is absolutely necessary
+
+What _is_ a promise?
+
+From the R language definition:
+
+- Promise objects are part of R’s lazy evaluation mechanism
+- They contain three slots: a value, an expression, and an environment 
+- When a function is called the arguments are matched and then each of the formal arguments is bound to a promise
+- The expression that was given for that formal argument and a pointer to the environment the function was called from are stored in the promise
 
 ---
 
@@ -239,22 +300,50 @@ Here's an example of lazy evaluation in action:
 
 ```r
 f &lt;- function(arg) {
-  expr
-  print("Looks like we made it")
+  arg
+  print("Nothing to see here...")
 }
 
 f(stop(error_msg))
 ```
 
 ```
-## Error in f(stop(error_msg)): object 'expr' not found
+## Error in f(stop(error_msg)): Uh oh! You friccin moron. You just got BEANED!!!
 ```
 
 ???
 However, if the argument is used for _anything_, it forces evaluation, and we get an error
 
 ---
+layout: true
 
+## Calls are represented by abstract syntax trees (AST)
+
+---
+
+.pull-left[
+
+```r
+e1 &lt;- quote(y &lt;- 2 * x)
+e2 &lt;- quote(`&lt;-`(y, `*`(2, x)))
+identical(e1, e2)
+```
+
+```
+## [1] TRUE
+```
+]
+
+???
+Now we get to those aforementioned _abstract syntax trees_.
+
+Here, we have the expression `y &lt;- 2 * x`, which is _captured_ instead of evaluated via `quote()` (more on this later).  
+Then we have another expression that may look different, but is actually the same.
+
+---
+count: false
+
+.pull-left[
 
 ```r
 e1 &lt;- quote(y &lt;- 2 * x)
@@ -266,31 +355,99 @@ identical(e1, e2)
 ## [1] TRUE
 ```
 
---
-
-&lt;img src="figs/simple-ast.svg" width="50%" style="display: block; margin: auto;" /&gt;
-
-???
-Here is a graphical representation of what's going on, called an _abstract syntax tree (AST)_.  
-The orange squares represent calls; first child is the function being called, subsequent children are arguments.
-
-
----
-
-```lisp
-(setq y (* 2 x))
+```r
+mode(e1)
 ```
 
-
----
-
-## Everything is a function
+```
+## [1] "call"
+```
 
 .pull-left[
 
 ```r
-e1 &lt;- quote(1)
-e2 &lt;- quote(({1}))
+as.list(e1)
+```
+
+```
+## [[1]]
+## `&lt;-`
+## 
+## [[2]]
+## y
+## 
+## [[3]]
+## 2 * x
+```
+]
+.pull-right[
+
+```r
+as.list(e2)
+```
+
+```
+## [[1]]
+## `&lt;-`
+## 
+## [[2]]
+## y
+## 
+## [[3]]
+## 2 * x
+```
+]
+]
+
+???
+What happens is that expressions are turned into _parse trees_ by the R interpreter, i.e. the structure it uses to evaluate the expression.  
+`e2` is on so-called _standard form_, and when we type in `e1`, under the hood it gets turned into standard form.
+
+`e1` is a `call` object in R, and if we break it into atoms, we see that it's represented exactly the same as `e2`.
+
+Tip: in RStudio, type `View(e1)` to interactively and recursively browse the atoms of a call object **[show this]**
+
+--
+
+.pull-right[
+&lt;img src="figs/simple-ast.svg" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+???
+Here is a graphical representation of what's going on, called an _abstract syntax tree (AST)_.  
+
+- The orange squares represent calls; first child is the function being called, subsequent children are arguments.
+
+- Purple, rounded boxes represent symbols; symbols refer to R objects, it's what you type before `&lt;-`, e.g. `y`
+
+- Black boxes are syntactic literals; atomic values (logical, numeric, character, etc.)
+
+---
+layout: true
+
+## Everything is a call
+
+???
+Everything in the language is a call (or a symbol or a literal)
+
+Looking at the values of these two expressions, they're obviously identical.  
+They both simply evaluate to a numeric 1.
+
+However, the expressions themselves are different from each other.
+
+This is because everything in R (that isn't a symbol or literal) is a function, including all the delimiters.  
+Parentheses and braces are `.Primitive` functions in R, and act as identity functions (with different printing rules).
+
+---
+
+.pull-left[
+
+```r
+identical(1, ({1}))
+```
+
+```
+## [1] TRUE
 ```
 ]
 
@@ -298,18 +455,10 @@ e2 &lt;- quote(({1}))
 ---
 count: false
 
-## Everything is a function
-
 .pull-left[
 
 ```r
-e1 &lt;- quote(1)
-e2 &lt;- quote(({1}))
-```
-
-
-```r
-identical(eval(e1), eval(e2))
+identical(1, ({1}))
 ```
 
 ```
@@ -317,6 +466,8 @@ identical(eval(e1), eval(e2))
 ```
 
 ```r
+e1 &lt;- quote(1)
+e2 &lt;- quote(({1}))
 identical(e1, e2)
 ```
 
@@ -325,18 +476,203 @@ identical(e1, e2)
 ```
 ]
 
+---
+count: false
+
+.pull-left[
+
+```r
+identical(1, ({1}))
+```
+
+```
+## [1] TRUE
+```
+
+```r
+e1 &lt;- quote(1)
+e2 &lt;- quote(({1}))
+identical(e1, e2)
+```
+
+```
+## [1] FALSE
+```
+
+.pull-left[
+
+```r
+typeof(e1)
+```
+
+```
+## [1] "double"
+```
+]
+
+.pull-right[
+
+```r
+typeof(e2)
+```
+
+```
+## [1] "language"
+```
+]
+]
+
 --
 
 .pull-right[
-&lt;img src="figs/parens-ast.svg" width="75%" style="display: block; margin: auto;" /&gt;
+&lt;img src="figs/parens-ast.svg" width="55%" style="display: block; margin: auto;" /&gt;
 ]
+
+---
+
+.pull-left[
+
+```r
+for (i in 1:10) {
+  i^2
+}
+```
+&lt;img src="figs/for-ast.svg" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+.pull-right[
+
+```r
+if (x &gt;= 0) {
+  sqrt(x)
+} else {
+  0
+}
+```
+&lt;img src="figs/if-ast.svg" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+???
+The same goes for more involved control structures.
+
+Here are the ASTs for a simple `for` loop and an `if-else` block.  
+They are no different than they would be for any other function;
+
+- First child is the function name (`for`, `if`)
+
+- Subsequent children are function arguments
+
+  + looping variable, its range, and the expression to evaluate
+  
+  + condition, expression if `TRUE`, expression if `FALSE`
+
+As an aside leading back to Lisp:  
+Once you get the hang of ASTs, you basically know Lisp
+
+In Emacs [Lisp Interaction]:
+
+```lisp
+(set 'y '(* 2 x))
+(set 'x 4)
+(eval y)
+```
+
+`C-u C-x C-e` to eval and insert value
+
+---
+layout: false
+
+
+class: center, middle
+
+## Environments
+
+???
+Up until now, I've mentioned _environments_ a lot.
+
+They are, put shortly, kinda like lists, but
+
+- have unique names
+- have unordered elements
+- have parent environments
+- are _not_ copied when modified
+
+---
+
+## Lexical scoping
+
+???
+Lexical scoping referes to how R looks up values for symbols you use in function calls.
+
+This is another thing R has inherited from Lisp.  
+It looks up symbols based on how functions were nested when they were created (not called)
+
+When a function is called
+
+1. R looks up its arguments in the environment where the function is defined
+2. If it doesn't find it, it goes to the parent environment
+3. If it ends up in the `emptyenv`, the ancestor of all environments, it throws an error
+
+--
+
+.pull-left[
+
+```r
+f1 &lt;- function() {
+  b &lt;- 2
+  f2 &lt;- function() {
+    c &lt;- 3
+    f3 &lt;- function() {
+      a + b + c
+    }
+    f3()
+  }
+  f2()
+}
+```
+]
+
+???
+Here is an example with three nested functions
+
+--
+
+.pull-right[
+
+```r
+f1()
+```
+
+```
+## Error in f3(): object 'a' not found
+```
+
+```r
+a &lt;- 1
+f1()
+```
+
+```
+## [1] 6
+```
+
+]
+
+???
+When we call it, R starts looking up symbols from the innermost function environment.
+
+At first, since it doesn't find `a`, it throws an error.  
+But if we define `a` in the global environment, it returns a value.
 
 
 ---
+layout: false
 
 
 name: howto
 class: middle, center, inverse
+background-image: url(./img/black-50.png), url(./img/typing.jpg)
+background-size: cover
 
 # How to metaprogram in R
 
@@ -382,6 +718,392 @@ It's a question you ask yourself every time you develop an R package:
   + it plays very well with other `tidyverse` packages
 
 ---
+layout: true
+name: quasiquotation
+
+## Quasiquotation
+
+---
+
+???
+We return to Orman Quine's concept of _quasiquotation_, which plays a central role in metaprogramming.
+
+There are two sides to quasiquatation:
+
+- Quotation
+- Unquotation
+
+---
+count: false
+name: quotation
+
+.left-column[
+### Quotation
+]
+
+.right-column[
+- .rb[`expr()`] : capture an expression _exactly as typed_
+- .rb[`exprs()`] : create a list of expressions
+
+.pull-left[
+
+```r
+expr(y &lt;- 2 * x)
+```
+
+```
+## y &lt;- 2 * x
+```
+
+```r
+f1 &lt;- function(x) expr(x)
+f1(y &lt;- 2 * x)
+```
+
+```
+## x
+```
+]
+
+.pull-right[
+
+```r
+exprs(x = x^2, y = y^3)
+```
+
+```
+## $x
+## x^2
+## 
+## $y
+## y^3
+```
+
+]
+
+]
+
+???
+Quotation is the act of capturing an unevaluated expression.
+
+Capturing the AST of an expression associated with an argument is the core of NSE.  
+`rlang` provides several functions for this task:
+
+`expr`/`exprs`, in Hadley's own terminology, capture the _developer's_ expressions.  
+This means that the literal code you type between the parentheses is what is quoted;
+using it to quote an argument inside a function will return the argument name.
+
+---
+
+.left-column[
+### Quotation
+]
+
+.right-column[
+- .rb[`enexpr()`] : capture a user-supplied expression
+- .rb[`enexprs()`] : capture multiple user-supplied expressions
+
+.pull-left[
+
+```r
+f1 &lt;- function(x) enexpr(x)
+f1(y &lt;- 2 * x)
+```
+
+```
+## y &lt;- 2 * x
+```
+]
+
+.pull-right[
+
+```r
+f2 &lt;- function(x, y) enexprs(x, y)
+f2(x^2, y^3)
+```
+
+```
+## [[1]]
+## x^2
+## 
+## [[2]]
+## y^3
+```
+
+]
+
+]
+
+???
+Most of the time, we probably don't want to quote our own input, but our users' instead.
+
+`enexpr`/`enexprs` capture the _user's_ expressions.  
+This means that it captures the expression associated with a function argument _as the user supplied it_ instead of how you, the developer, coded it.
+
+---
+
+.left-column[
+### Quotation
+]
+
+.right-column[
+- .rb[`sym()`], .rb[`syms()`] : turn string(s) into symbols
+- .rb[`ensym()`], .rb[`ensyms()`] : variants of `enexpr[s]` for strings OR bare symbols
+
+.pull-left[
+
+```r
+sym("x")
+```
+
+```
+## x
+```
+
+```r
+f1 &lt;- function(x) sym(x)
+f1("y")
+```
+
+```
+## y
+```
+
+]
+
+.pull-right[
+
+```r
+f2 &lt;- function(...) ensyms(...)
+f2("x", y)
+```
+
+```
+## [[1]]
+## x
+## 
+## [[2]]
+## y
+```
+
+```r
+exists("y")
+```
+
+```
+## [1] FALSE
+```
+
+]
+
+]
+
+???
+As I mentioned in the pros of `rlang`, it's syntactically consistent, and many functions exists in plural and en-prefixed variants
+
+These functions differ from `[en]expr[s]` in that their arguments must correspond to symbols, atoms of expressions, rather than whole expressions.
+
+`sym`/`syms` are for turning strings into quoted symbols; useful for `tidyverse` programming (we'll get to that later)
+
+`ensym`/`ensyms` perhaps takes a little more explaining: they check that the captured expression is _either_ a string or a symbol
+
+- If string: converts to symbol
+- If symbol: leaves as symbol
+- Error otherwise
+
+---
+
+.left-column[
+### Quotation
+]
+
+.right-column[
+- .rb[`quo()`], .rb[`quos()`] : like `expr[s]`, but also captures the current environment
+- .rb[`enquo()`], .rb[`enquos()`] : like `enexpr[s]`, but also captures the calling environment
+
+
+```r
+f &lt;- function() {
+  foo &lt;- 10
+  quo(foo * 2)
+}
+f()
+```
+
+```
+## &lt;quosure&gt;
+##   expr: ^foo * 2
+##   env:  0x5a7c5f0
+```
+
+]
+
+???
+Quosures (quote + closure) form the basis of the so-called _tidy evaluation_ framework (which we'll get to in a second).  
+They are implemented as a subclass of onesided formulas.
+
+Quosures expand on the "regular" quoting functions by not only capturing expressions, but also their context, i.e. the environments from which they came.
+
+The example shown here is not very interesting until we get to [Evaluation](#evaluation).
+
+---
+name: unquoation
+
+.left-column[
+### Quotation
+
+### Unquotation
+]
+
+.right-column[
+- .rb[`!!`]  : (unquote) unquotes its argument (single expression)
+- .rb[`!!!`] : (unquote-splice) unquotes and splices its argument (list of expressions)
+
+.pull-left[
+
+```r
+x &lt;- expr(a + b + c)
+expr(f(!!x, y))
+```
+
+```
+## f(a + b + c, y)
+```
+
+```r
+xs &lt;- exprs(a + b, c + d)
+expr(f(!!!xs))
+```
+
+```
+## f(a + b, c + d)
+```
+]
+
+.pull-right[
+
+```r
+f &lt;- function(x) {
+  x &lt;- enexpr(x)
+  expr(!!x + y)
+}
+f(my_var)
+```
+
+```
+## my_var + y
+```
+
+]
+
+]
+
+???
+Unquotation is related to evaluation, but with an important distinction:  
+Unquoting lets us selectively evaluate parts of a quoted expression.
+Using this technique, we can form complex ASTs from simpler expressions.
+
+To put it simply, the unquote and unquote-splice _replace_ nodes in the ASTs.
+
+In Lisp:
+
+```lisp
+(set 'snue '(bar baz))
+
+`(foo ,snue)
+;;&gt; (foo (bar baz))
+
+`(foo ,@snue) 
+;;&gt; (foo bar baz)
+```
+
+---
+layout: false
+name: evaluation
+
+## Evaluation
+
+???
+Typically, you quote code because you want to either do something with the AST, run the code in another context, or (often) both.
+
+--
+
+- .rb[`eval_bare()`] or simply .rb[`base::eval()`] : evaluate quoted expression
+- .rb[`eval_tidy()`] : evaluate quosure
+
+???
+`rlang` provides 
+
+- `eval_bare` as a lower-level version of `base::eval`, which just evaluate their argument, optionally specifying an environment
+- `eval_tidy` for evaluation the special quosures, who as we saw "remember" the environment in which they were defined
+
+--
+
+.pull-left[
+
+```r
+foo &lt;- 5
+f1 &lt;- function() {
+  foo &lt;- 10
+  expr(foo * 2)
+}
+my_expr &lt;- f1()
+my_expr
+```
+
+```
+## foo * 2
+```
+
+```r
+eval_bare(my_expr)
+```
+
+```
+## [1] 10
+```
+
+]
+
+.pull-right[
+
+```r
+foo &lt;- 5
+f2 &lt;- function() {
+  foo &lt;- 10
+  quo(foo * 2)
+}
+my_quo &lt;- f2()
+my_quo
+```
+
+```
+## &lt;quosure&gt;
+##   expr: ^foo * 2
+##   env:  0x5441120
+```
+
+```r
+eval_tidy(my_quo)
+```
+
+```
+## [1] 20
+```
+
+]
+
+???
+These examples show the difference between regular evaluation and tidy evaluation.
+
+In the `expr` example to the left, `my_expr` only carries with it information about the expression it represent, and not its context.  
+As such, when we evaluate it, the looks up symbols in the current environment, here the global environment, and finds `foo = 5`.
+
+In the `quo` example, however, `my_quo` additionally includes the context from its creation, i.e. the _execution_ environment.  
+It therefore finds `foo = 10` from within the scope of `f2` and uses that, even though we also have `foo` in the global environment.
+
+---
+layout: false
 
 
 name: applications
@@ -391,59 +1113,71 @@ class: center, middle, inverse
 
 ???
 
-- time to look at some examples
+Time to look at some examples.
 
 ---
-&lt;!-- Programming with tidyverse -------------------------------------------------------------------&gt;
+class: center, middle
+background-image: url(img/white-85.png), url(img/hadley.jpg)
+background-size: cover
+
+## Programming with tidyverse
 
 
-# Programming with tidyverse
 
+???
+NSE is almost synonymous with `tidyverse`, and I'd wager it's where most of us first hears about it.
 
+It's a common problem when you want to program with `tidyverse` packages:  
+they are made for interactive use and uses NSE for syntactic convenience.  
+This makes life difficult for us as developers, however.
 
---
+- Previously, `tidyverse` functions came in two variants: the regular, and an "underscored" one, where the latter used SE
+- This is no longer the case (the underscored functions were deprecated when the ideas of `rlang` were put into place)
+- Instead, we use the `rlang` functions I've covered with the regular functions
+
+Instead of having special functions that take strings instead of expressions, we provide the arguments as expressions using quasiquotation.
+
+For me, personally, I often saw this during my time as a student assistant at NEAS;  
+
+- Many of my tasks involved creating interactive analytics dashboards with Shiny
+- These would in some way did some data analysis based on user inputs
+- Back then, however, all the things I've been talking about were developing ideas, and I had enough on my plate just learning how to wrangle data, so I never got to _actually_ use these techniques
+- But it serves as a prime example of a situation in which it makes sense
+
+Let's take a look at some scenarios you might find yourself in when programming with `tidyverse`.
+
+---
+
+### Scenario: interactive end user function
 
 .pull-left[
-- Problem: `tidyverse` functions are made for interactive use
-
 
 ```r
-my_count &lt;- 
-  function(data, group_var) {
+my_count &lt;- function(data, group_var) {
   data %&gt;% 
     group_by(group_var) %&gt;% 
     tally()
 }
-```
 
-```r
 my_count(iris, Species)
 ```
 
-
 ```
-## Error in &lt;...&gt;:
+## Error in [truncated]:
 ## Column `group_var` is unknown
 ```
 ]
 
---
-
 .pull-right[
-- Solution: capture argument and evaluate in the correct context
-
 
 ```r
-my_count2 &lt;- 
-  function(data, group_var) {
-*   group_var &lt;- enquo(group_var)
-    data %&gt;% 
-      group_by(!! group_var) %&gt;% 
-      tally()
-  }
-```
+my_count2 &lt;- function(data, group_var) {
+  group_var &lt;- enexpr(group_var)
+  data %&gt;% 
+    group_by(!!group_var) %&gt;% 
+    tally()
+}
 
-```r
 my_count2(iris, Species)
 ```
 
@@ -457,6 +1191,150 @@ my_count2(iris, Species)
 ```
 ]
 
+???
+## Scenario
+You want to write a function that mimics the style of `tidyverse` functions, i.e. it lets the user type in `group_var` as-is.  
+Supplying `group_var` as-is to `group_by` makes it look for a column literally named `group_var`.
+
+## Solution
+Quote `group_var` and unquote it in the context where it's used
+---
+
+### Scenario: variable selection in e.g. a Shiny app
+
+.pull-left[
+
+```r
+my_select1 &lt;- function(data, vars) {
+  data %&gt;% 
+    select(vars)
+}
+
+df &lt;- tibble(x = 1:5, y = 6:10, 
+             vars = letters[1:5])
+my_vars &lt;- c("x", "y")
+
+my_select1(df, my_vars)
+```
+
+```
+## # A tibble: 5 x 1
+##   vars 
+##   &lt;chr&gt;
+## 1 a    
+## 2 b    
+## 3 c    
+## 4 d    
+## 5 e
+```
+]
+
+.pull-right[
+
+```r
+my_select2 &lt;- function(data, vars) {
+  vars &lt;- ensyms(vars)
+  data %&gt;% 
+    select(!!!vars)
+}
+
+my_select2(df, my_vars)
+```
+
+```
+## # A tibble: 5 x 2
+##       x     y
+##   &lt;int&gt; &lt;int&gt;
+## 1     1     6
+## 2     2     7
+## 3     3     8
+## 4     4     9
+## 5     5    10
+```
+]
+
+???
+## Scenario
+You want to let your users use `dplyr::select` in a Shiny app, where they can pick variables from e.g. a `selectInput`.  
+While `select` _can_ be used with string vectors, you run into trouble if a column in the data has the same name as the vector (contrived, I know).
+
+## Solution
+Turn the vector of strings into a list of symbols with `ensyms` and unquote-splice inside `select`.
+
+---
+
+### Scenario: end user function involving variable assignment 
+
+.pull-left[
+
+```r
+my_adder1 &lt;- function(data, col1, col2, newcol) {
+  col1 &lt;- ensym(col1)
+  col2 &lt;- ensym(col2)
+  newcol &lt;- ensym(newcol)
+  data %&gt;% 
+    mutate(!!newcol = !!col1 + !!col2)
+}
+
+my_adder1(df, x, y, z)
+```
+
+```
+## Error: &lt;text&gt;:6:21: unexpected '='
+## 5:   data %&gt;% 
+## 6:     mutate(!!newcol =
+##                        ^
+```
+
+- .rb[`:=`] : (colon-equals) definition operator that supports unquoting on both the LHS and RHS
+]
+
+.pull-right[
+
+```r
+my_adder2 &lt;- function(data, col1, col2, newcol) {
+  col1 &lt;- ensym(col1)
+  col2 &lt;- ensym(col2)
+  newcol &lt;- ensym(newcol)
+  data %&gt;% 
+    mutate(!!newcol := !!col1 + !!col2)
+}
+
+my_adder2(df, x, y, z)
+```
+
+```
+## # A tibble: 5 x 4
+##       x     y vars      z
+##   &lt;int&gt; &lt;int&gt; &lt;chr&gt; &lt;int&gt;
+## 1     1     6 a         7
+## 2     2     7 b         9
+## 3     3     8 c        11
+## 4     4     9 d        13
+## 5     5    10 e        15
+```
+]
+
+???
+## Scenario
+You want to make an interactive function, `tidyverse` style, that lets the user select two columns to add together to a new column, and set a name for it.  
+However, the code `newcol = !!col1 + col2` results in a new column that's always named `newcol`, and unquoting it is invalid syntax.
+
+## Solution
+Use the special colon-equals operator, `:=`
+
+---
+class: center, middle
+
+## Domain specific languages
+
+???
+Another application is DSL: language specialised to a particular application domain
+
+Examples hereof:
+
+- `dplyr` verbs translate directly into SQL code; you can use SQL by only knowing R and `dplyr`
+- The AST figures in this very presentation! I wrote a function that takes an expression as its argument, quotes it, and by traversing and inspecting the AST translates it into TiKZ code, which is then rendered in a template
 
 ---
 
@@ -464,44 +1342,37 @@ my_count2(iris, Species)
 
 Action | `base` | `rlang`
 --- | --- | ---
-Quote input as-is | `quote` | `expr`, `quo`
-Quote user input | `substitute` | `enexpr`, `enquo`
-
-
----
-
-
-name: tips
-
-# Tips &amp; tricks
-
---
-
-- Appease `R CMD check` with `utils::globalVariables(c("foo", "bar", "baz"))`
+Quote input as-is | `quote` | `expr`
+Quote multiple inputs as-is | | `exprs` 
+Quote user input | `substitute` / `bquote` | `enexpr`
+Quote multiple user inputs | | `enexprs`
+Turn string into symbol | `as.name` | `sym` / `ensym`
+Turn multiple strings into symbols | | `syms` / `ensyms`
+Unquote quoted expression(s) | `?bquote` | `!!` / `!!!`
+Evaluate expression | `eval` | `eval_bare`
+Evaluate quosure | | `eval_tidy`
+Deparse expression | `deparse` | `expr_deparse`
+Deparse quosure | | `quo_text` / `quo_label` / `quo_name`
 
 ???
-- some usages of NSE might make `R CMD check` think you have uninitialised variables
-- `utils::globalVariables` tells `R CMD check` that it's fine
+As a closing remark on this part, here is a quick overview of some commonly used `rlang` functions and their `base` counterparts.
 
---
-
-- ...
-
-???
-- more tricks here...
-
+Note the `?` on `?bquote` under unquotation.  
+By that I mean that you should check the help file for `bquote` to see how you can get something close to unquotation in `base`.
 
 ---
+layout: false
 
 
 name: links
 
-# Links
-
+## Links
 
 📕 [Advanced R](https://adv-r.hadley.nz) by Hadley Wickham (online book)
 
 - in particular, the chapter on [Metaprogramming](https://adv-r.hadley.nz/meta.html)
+
+![icon](img/julia.png) [Metaprogramming in Julia](https://docs.julialang.org/en/v1/manual/metaprogramming/) ― even if you don't care about Julia itself
 
 &lt;i class="fa fa-github"&gt;&lt;/i&gt; [repository](https://github.com/AalborgRUG/talk-nse) for this presentation with source code
 
@@ -512,8 +1383,12 @@ name: links
 
 📦 [jsvm](https://github.com/janusvm/jsvm), used for producing the AST figures (developed by yours truly 😏)
 
+.footnote[
+You can view these slides (with clickable links) online on [**`aalborgrug.github.io/talk-nse`**](https://aalborgrug.github.io/talk-nse)
+]
 
 ---
+layout: false
 class: inverse, middle, center
 
 # ✨ Thank you for your time ✨
@@ -522,7 +1397,8 @@ class: inverse, middle, center
 <script>var slideshow = remark.create({
 "highlightStyle": "monokai-sublime",
 "highlightLines": true,
-"countIncrementalSlides": false
+"countIncrementalSlides": false,
+"ratio": "16:9"
 });
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));

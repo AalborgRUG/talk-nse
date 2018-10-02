@@ -1,11 +1,12 @@
 name: links
 
-# Links
-
+## Links
 
 `r emo::ji("closed_book")` [Advanced R](https://adv-r.hadley.nz) by Hadley Wickham (online book)
 
 - in particular, the chapter on [Metaprogramming](https://adv-r.hadley.nz/meta.html)
+
+![icon](img/julia.png) [Metaprogramming in Julia](https://docs.julialang.org/en/v1/manual/metaprogramming/) ― even if you don't care about Julia itself
 
 `r fa("github")` [repository](https://github.com/AalborgRUG/talk-nse) for this presentation with source code
 
@@ -16,3 +17,6 @@ name: links
 
 `r emo::ji("package")` [jsvm](https://github.com/janusvm/jsvm), used for producing the AST figures (developed by yours truly `r {emo::ji("smirk")}`)
 
+.footnote[
+You can view these slides (with clickable links) online on [**`aalborgrug.github.io/talk-nse`**](https://aalborgrug.github.io/talk-nse)
+]

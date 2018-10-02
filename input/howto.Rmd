@@ -1,5 +1,7 @@
 name: howto
 class: middle, center, inverse
+background-image: url(./img/black-50.png), url(./img/typing.jpg)
+background-size: cover
 
 # How to metaprogram in R
 
@@ -42,3 +44,275 @@ It's a question you ask yourself every time you develop an R package:
   + it's recent
   + it's consistent
   + it plays very well with other `tidyverse` packages
+
+---
+layout: true
+name: quasiquotation
+
+## Quasiquotation
+
+---
+
+???
+We return to Orman Quine's concept of _quasiquotation_, which plays a central role in metaprogramming.
+
+There are two sides to quasiquatation:
+
+- Quotation
+- Unquotation
+
+---
+count: false
+name: quotation
+
+.left-column[
+### Quotation
+]
+
+.right-column[
+- .rb[`expr()`] : capture an expression _exactly as typed_
+- .rb[`exprs()`] : create a list of expressions
+
+.pull-left[
+```{r}
+expr(y <- 2 * x)
+f1 <- function(x) expr(x)
+f1(y <- 2 * x)
+```
+]
+
+.pull-right[
+```{r}
+exprs(x = x^2, y = y^3)
+```
+
+]
+
+]
+
+???
+Quotation is the act of capturing an unevaluated expression.
+
+Capturing the AST of an expression associated with an argument is the core of NSE.  
+`rlang` provides several functions for this task:
+
+`expr`/`exprs`, in Hadley's own terminology, capture the _developer's_ expressions.  
+This means that the literal code you type between the parentheses is what is quoted;
+using it to quote an argument inside a function will return the argument name.
+
+---
+
+.left-column[
+### Quotation
+]
+
+.right-column[
+- .rb[`enexpr()`] : capture a user-supplied expression
+- .rb[`enexprs()`] : capture multiple user-supplied expressions
+
+.pull-left[
+```{r}
+f1 <- function(x) enexpr(x)
+f1(y <- 2 * x)
+```
+]
+
+.pull-right[
+```{r}
+f2 <- function(x, y) enexprs(x, y)
+f2(x^2, y^3)
+```
+
+]
+
+]
+
+???
+Most of the time, we probably don't want to quote our own input, but our users' instead.
+
+`enexpr`/`enexprs` capture the _user's_ expressions.  
+This means that it captures the expression associated with a function argument _as the user supplied it_ instead of how you, the developer, coded it.
+
+---
+
+.left-column[
+### Quotation
+]
+
+.right-column[
+- .rb[`sym()`], .rb[`syms()`] : turn string(s) into symbols
+- .rb[`ensym()`], .rb[`ensyms()`] : variants of `enexpr[s]` for strings OR bare symbols
+
+.pull-left[
+```{r}
+sym("x")
+f1 <- function(x) sym(x)
+f1("y")
+```
+
+]
+
+.pull-right[
+```{r}
+f2 <- function(...) ensyms(...)
+f2("x", y)
+exists("y")
+```
+
+]
+
+]
+
+???
+As I mentioned in the pros of `rlang`, it's syntactically consistent, and many functions exists in plural and en-prefixed variants
+
+These functions differ from `[en]expr[s]` in that their arguments must correspond to symbols, atoms of expressions, rather than whole expressions.
+
+`sym`/`syms` are for turning strings into quoted symbols; useful for `tidyverse` programming (we'll get to that later)
+
+`ensym`/`ensyms` perhaps takes a little more explaining: they check that the captured expression is _either_ a string or a symbol
+
+- If string: converts to symbol
+- If symbol: leaves as symbol
+- Error otherwise
+
+---
+
+.left-column[
+### Quotation
+]
+
+.right-column[
+- .rb[`quo()`], .rb[`quos()`] : like `expr[s]`, but also captures the current environment
+- .rb[`enquo()`], .rb[`enquos()`] : like `enexpr[s]`, but also captures the calling environment
+
+```{r}
+f <- function() {
+  foo <- 10
+  quo(foo * 2)
+}
+f()
+```
+
+]
+
+???
+Quosures (quote + closure) form the basis of the so-called _tidy evaluation_ framework (which we'll get to in a second).  
+They are implemented as a subclass of onesided formulas.
+
+Quosures expand on the "regular" quoting functions by not only capturing expressions, but also their context, i.e. the environments from which they came.
+
+The example shown here is not very interesting until we get to [Evaluation](#evaluation).
+
+---
+name: unquoation
+
+.left-column[
+### Quotation
+
+### Unquotation
+]
+
+.right-column[
+- .rb[`!!`]  : (unquote) unquotes its argument (single expression)
+- .rb[`!!!`] : (unquote-splice) unquotes and splices its argument (list of expressions)
+
+.pull-left[
+```{r}
+x <- expr(a + b + c)
+expr(f(!!x, y))
+xs <- exprs(a + b, c + d)
+expr(f(!!!xs))
+```
+]
+
+.pull-right[
+```{r}
+f <- function(x) {
+  x <- enexpr(x)
+  expr(!!x + y)
+}
+f(my_var)
+```
+
+]
+
+]
+
+???
+Unquotation is related to evaluation, but with an important distinction:  
+Unquoting lets us selectively evaluate parts of a quoted expression.
+Using this technique, we can form complex ASTs from simpler expressions.
+
+To put it simply, the unquote and unquote-splice _replace_ nodes in the ASTs.
+
+In Lisp:
+
+```lisp
+(set 'snue '(bar baz))
+
+`(foo ,snue)
+;;> (foo (bar baz))
+
+`(foo ,@snue) 
+;;> (foo bar baz)
+```
+
+---
+layout: false
+name: evaluation
+
+## Evaluation
+
+???
+Typically, you quote code because you want to either do something with the AST, run the code in another context, or (often) both.
+
+--
+
+- .rb[`eval_bare()`] or simply .rb[`base::eval()`] : evaluate quoted expression
+- .rb[`eval_tidy()`] : evaluate quosure
+
+???
+`rlang` provides 
+
+- `eval_bare` as a lower-level version of `base::eval`, which just evaluate their argument, optionally specifying an environment
+- `eval_tidy` for evaluation the special quosures, who as we saw "remember" the environment in which they were defined
+
+--
+
+.pull-left[
+```{r}
+foo <- 5
+f1 <- function() {
+  foo <- 10
+  expr(foo * 2)
+}
+my_expr <- f1()
+my_expr
+eval_bare(my_expr)
+```
+
+]
+
+.pull-right[
+```{r}
+foo <- 5
+f2 <- function() {
+  foo <- 10
+  quo(foo * 2)
+}
+my_quo <- f2()
+my_quo
+eval_tidy(my_quo)
+```
+
+]
+
+???
+These examples show the difference between regular evaluation and tidy evaluation.
+
+In the `expr` example to the left, `my_expr` only carries with it information about the expression it represent, and not its context.  
+As such, when we evaluate it, the looks up symbols in the current environment, here the global environment, and finds `foo = 5`.
+
+In the `quo` example, however, `my_quo` additionally includes the context from its creation, i.e. the _execution_ environment.  
+It therefore finds `foo = 10` from within the scope of `f2` and uses that, even though we also have `foo` in the global environment.

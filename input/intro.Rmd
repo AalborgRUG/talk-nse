@@ -8,21 +8,19 @@
 
 - Used R extensively since then, both for university projects and as part of my former student assistant job at NEAS Energy A/S (2016-2018)
 
-
 ---
 
-## Topics in this presentation
+## This talk in a nutshell
 
-1. What is metaprogramming?
+1. The structure of the R language
 
-2. How to do it in practise
+2. How to metaprogram in R
 
-3. Case studies
-
+3. Applications
 
 ???
-1. An introduction to metaprogramming, explaining the concepts
+1. In the first part I will dive into the inner workings of R and show you the parts that enable metaprogramming
 
-2. An in-depth look at how to (as a developer) use it in R
+2. In the second part, I will show you an overview the tools you need and what they do
 
-3. Showcase some examples where it makes sense to use, including a live demo
+3. In the last part, I will show you some situations in which metaprogramming comes in handy

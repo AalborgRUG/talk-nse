@@ -5,7 +5,7 @@
 /* Code */
 .remark-code, .remark-inline-code {
   font-family: 'Ubuntu Mono', 'Lucida Console', Monaco, monospace;
-  font-weight: 400;
+  /* font-weight: 400; */
 }
 
 .remark-inline-code {
@@ -31,8 +31,12 @@
 /* ----- STYLE ----- */
 
 /* Custom style tags */
-.large { font-size: 130% }
-.small { font-size: 70% }
+.large { font-size: 130%; }
+.small { font-size: 70%; }
+.rb{
+  color: rgb(249, 38, 114);
+  font-weight: 700;
+}
 
 /* Remove slide number from inverse slides */
 .inverse .remark-slide-number {
@@ -50,3 +54,10 @@
 .title-slide > h3:nth-of-type(2) {
   color: #7f7f7c;
 }
+
+/* Image icons */
+img[alt=icon] {
+  width: 20px;
+  vertical-align: -2pt;
+}
+

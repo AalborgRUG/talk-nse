@@ -1,0 +1,67 @@
+class: center, middle
+
+## Environments
+
+???
+Up until now, I've mentioned _environments_ a lot.
+
+They are, put shortly, kinda like lists, but
+
+- have unique names
+- have unordered elements
+- have parent environments
+- are _not_ copied when modified
+
+---
+
+## Lexical scoping
+
+???
+Lexical scoping referes to how R looks up values for symbols you use in function calls.
+
+This is another thing R has inherited from Lisp.  
+It looks up symbols based on how functions were nested when they were created (not called)
+
+When a function is called
+
+1. R looks up its arguments in the environment where the function is defined
+2. If it doesn't find it, it goes to the parent environment
+3. If it ends up in the `emptyenv`, the ancestor of all environments, it throws an error
+
+--
+
+.pull-left[
+```{r}
+f1 <- function() {
+  b <- 2
+  f2 <- function() {
+    c <- 3
+    f3 <- function() {
+      a + b + c
+    }
+    f3()
+  }
+  f2()
+}
+```
+]
+
+???
+Here is an example with three nested functions
+
+--
+
+.pull-right[
+```{r, error=TRUE}
+f1()
+a <- 1
+f1()
+```
+
+]
+
+???
+When we call it, R starts looking up symbols from the innermost function environment.
+
+At first, since it doesn't find `a`, it throws an error.  
+But if we define `a` in the global environment, it returns a value.

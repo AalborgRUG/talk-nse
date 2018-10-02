@@ -11,6 +11,7 @@ output:
       highlightStyle: monokai-sublime
       highlightLines: true
       countIncrementalSlides: false
+      ratio: "16:9"
 ---
 
 ```{r setup, include=FALSE}
@@ -32,7 +33,7 @@ fig <- function(file) file.path("figs", file)
 fa <- function(icon) paste0('<i class="fa fa-', icon, '"></i>')
 error_print <- function(expr) {
   e <- tryCatch(expr, error = function(e) e$message)
-  cat("Error in <...>:", e, sep = "\n")
+  cat("Error in [truncated]:", e, sep = "\n")
 }
 ```
 
@@ -40,31 +41,31 @@ error_print <- function(expr) {
 ```
 
 ---
+layout: false
 
 ```{r metaprogramming, child = "input/metaprogramming.Rmd"}
 ```
 
 ---
+layout: false
 
 ```{r howto, child = "input/howto.Rmd"}
 ```
 
 ---
+layout: false
 
 ```{r applications, child = "input/applications.Rmd"}
 ```
 
 ---
-
-```{r tips, child = "input/tips.Rmd"}
-```
-
----
+layout: false
 
 ```{r links, child = "input/links.Rmd"}
 ```
 
 ---
+layout: false
 class: inverse, middle, center
 
 # `r {emo::ji("sparkles")}` Thank you for your time `r {emo::ji("sparkles")}`
